@@ -36,6 +36,7 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 
 	// YAM
 	Treasury("/treasury", router, conf, geth)
+	Tvl("/tvl", router,  conf, geth)
 
 	return router
 }

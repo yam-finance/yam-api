@@ -3,6 +3,8 @@ package utils
 import (
 	"encoding/json"
 	"io/ioutil"
+	"math"
+	"math/big"
 	"net/http"
 	"yam-api/source/utils/log"
 )
@@ -69,4 +71,34 @@ func CheckSuccess(code int) bool {
 		value = false
 	}
 	return value
+}
+func BnToDec(number *big.Int, decimal int) *big.Float {
+	divineNumber := math.Pow10(decimal)
+
+	x, y := new(big.Float).SetInt(number), big.NewFloat(divineNumber)
+
+	z := new(big.Float).Quo(x, y)
+
+	return z
+}
+func GetWETHPrice() *big.Float {
+	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/weth")
+	if err != nil {
+		log.Error(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err)
+	}
+	sb := string(body)
+	var result map[string]interface{}
+	json.Unmarshal([]byte(sb), &result)
+
+	market_data := result["market_data"].(map[string]interface{})
+	current_price := market_data["current_price"].(map[string]interface{})
+	//f, err := strconv.ParseFloat(current_price["usd"], 8)
+	//fmt.Println(current_price["usd"])
+
+	return big.NewFloat(current_price["usd"].(float64))
+
 }
