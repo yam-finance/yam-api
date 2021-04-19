@@ -57,12 +57,10 @@ func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 
 		yamValue := utils.BnToDec(totalSLPReserves.Reserve0, 18)
 		ethValue := utils.BnToDec(totalSLPReserves.Reserve1, 18)
-		//	fmt.Println(ethValue)
-		//	fmt.Println(yamValue)
-		//	fmt.Println(yamPrice)
+
 		yamPriceFloat := utils.BnToDec(yamPrice, 18)
-		wethPrice := utils.GetWETHPrice()
 		totalIncentivizerValue := userInfo.Amount
+		wethPrice := utils.GetWETHPrice()
 
 		//	fmt.Println(yamPriceFloat)
 		//	fmt.Println(wethPrice)
