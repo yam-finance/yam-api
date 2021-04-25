@@ -15,3 +15,5 @@ eth:
     ws: "wss://mainnet.infura.io/ws/v3/"
   user: ""
   pass: ""
+
+etherscanKey: "YY6XQICVXTH8DIVGUK1TNKZGEKDZV4NV3K"

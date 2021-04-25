@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -26,6 +25,7 @@ type Config struct {
 		Username string `yaml:"user"`
 		Password string `yaml:"pass"`
 	} `yaml:"eth"`
+	EtherscanKey string `yaml:"etherscanKey"`
 }
 
 func Load(file string) (*Config, error) {
