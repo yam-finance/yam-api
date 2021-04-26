@@ -277,7 +277,7 @@ func (b *Bucket) fillRoutine() {
 
 func init() {
 	// @todo Update with config variable.
-	const envApiKey = "YY6XQICVXTH8DIVGUK1TNKZGEKDZV4NV3K"
+	const envApiKey = ""
 	apiKey = envApiKey
 
 	if apiKey == "" {
