@@ -1,11 +1,14 @@
 package routes
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math"
 	"math/big"
 	"net/http"
+	"os"
 	"yam-api/source/config"
 	"yam-api/source/utils"
 	"yam-api/source/utils/contractAddress"
@@ -35,6 +38,35 @@ type degenerative struct {
 type responseDegenerative struct {
 	Values degenerative `json:"values"`
 	Total  float64      `json:"total"`
+}
+type Assets struct {
+	Ugas    []AssetInstance
+	Ustonks []AssetInstance
+}
+type AssetInstance struct {
+	Name       string
+	Cycle      string
+	Year       string
+	Collateral string
+	Token      Token
+	Emp        Emp
+	Pool       Pool
+	Apr        AprData
+}
+type Emp struct {
+	Address string
+	New     bool
+}
+type Pool struct {
+	Address string
+}
+type AprData struct {
+	Force int
+	Extra int
+}
+type Token struct {
+	Address  string
+	Decimals int
 }
 
 func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
@@ -148,21 +180,46 @@ func TvlYam(path string, router chi.Router, conf *config.Config, geth *ethclient
 }
 func TvlDegenerative(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		assetsFile, err := os.Open("assets.json")
 
-		wethContract, err := weth.NewWeth(common.HexToAddress(contractAddress.WETH), geth)
 		if err != nil {
-			log.Fatalf("failed to instantiate contract: %v", err)
+			log.Fatalf("failed to get jasonfile: %v", err)
 		}
-		tvl, err := wethContract.BalanceOf(&bind.CallOpts{}, common.HexToAddress(contractAddress.UGASJUN21))
-		if err != nil {
-			log.Fatalf("failed to get tvl: %v", err)
-		}
-		result, _ := utils.BnToDec(tvl, 18).Float64()
+
+		fmt.Println("Successfully Opened assets.json")
+
+		//defer the closing of our jsonFile so that we can parse it later on
+		defer assetsFile.Close()
+		byteValue, _ := ioutil.ReadAll(assetsFile)
+		var assets Assets
+		json.Unmarshal([]byte(byteValue), &assets)
+		fmt.Println(assets.Ugas[0].Emp.Address)
+		wethPrice := utils.GetWETHPrice()
+		fmt.Println(wethPrice)
+
+		tvlJun21 := CalculateTvlDegenerative(assets.Ugas[3].Emp.Address, geth, wethPrice)
+		tvlMar21 := CalculateTvlDegenerative(assets.Ugas[2].Emp.Address, geth, wethPrice)
 		response := &responseDegenerative{
-			Values: degenerative{UGAS: map[string]float64{"MAR21": 0, "JUN21": result}},
-			Total:  result}
+			Values: degenerative{UGAS: map[string]float64{"MAR21": tvlMar21, "JUN21": tvlJun21}},
+			Total:  tvlMar21 + tvlJun21}
 		utils.ResJSON(http.StatusCreated, w,
 			response,
 		)
 	})
+}
+func CalculateTvlDegenerative(empcontractAddress string, geth *ethclient.Client, wethPrice *big.Float) float64 {
+
+	wethContract, err := weth.NewWeth(common.HexToAddress(contractAddress.WETH), geth)
+	if err != nil {
+		log.Fatalf("failed to instantiate contract: %v", err)
+	}
+	wethBalance, err := wethContract.BalanceOf(&bind.CallOpts{}, common.HexToAddress(empcontractAddress))
+	if err != nil {
+		log.Fatalf("failed to get wethBalance: %v", err)
+	}
+
+	wb := utils.BnToDec(wethBalance, 18)
+	result, _ := new(big.Float).Mul(wethPrice, wb).Float64()
+	return result
+
 }
