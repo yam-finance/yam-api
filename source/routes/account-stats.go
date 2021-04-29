@@ -275,9 +275,8 @@ func (b *Bucket) fillRoutine() {
 	}
 }
 
-func init() {
-	// @todo Update with config variable.
-	const envApiKey = ""
+func (c *Client) setup(apiKey string) {
+	var envApiKey = apiKey
 	apiKey = envApiKey
 
 	if apiKey == "" {
@@ -369,6 +368,8 @@ func GetERC20Transfers(accountAddress string, startBlock int, endBlock int) (txs
 
 func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		api.setup(conf.EtherscanKey)
+
 		// @todo Update with passed params.
 		accountAddress := "0x4e83362442b8d1bec281594cea3050c8eb01311c"
 		startTimeStamp := 1578638524
