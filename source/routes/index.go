@@ -38,7 +38,6 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	Treasury("/treasury", router, conf, geth)
 
 	// Account
-	// @todo Pass params.
 	GasStats("/account-stats", router, conf, geth)
 
 	return router
