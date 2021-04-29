@@ -370,10 +370,14 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		api.setup(conf.EtherscanKey)
 
-		// @todo Update with passed params.
-		accountAddress := "0x4e83362442b8d1bec281594cea3050c8eb01311c"
-		startTimeStamp := 1578638524
-		endTimeStamp := 1619373243
+		query := r.URL.Query()
+		address := query.Get("address")
+		startTime := query.Get("startTimeStamp")
+		endTime := query.Get("endTimeStamp")
+		
+		accountAddress := address
+		startTimeStamp, _ := strconv.Atoi(startTime)
+		endTimeStamp, _ := strconv.Atoi(endTime)
 
 		// @dev Build startBlock
 		block, blockNumberErr := api.GetBlockNumberByTimestamp(startTimeStamp, "after")
