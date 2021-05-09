@@ -11,7 +11,7 @@ database:
 
 eth:
   url:
-    http: "https://mainnet.infura.io/v3/e88682fd5b8e46bbb9c4eeb467bb6e63"
-    ws: "wss://mainnet.infura.io/ws/v3/"
+    http: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
+    ws: "wss://mainnet.infura.io/ws/v3/9aa3d95b3bc440fa88ea12eaa4456161"
   user: ""
   pass: ""
