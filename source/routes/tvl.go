@@ -39,35 +39,6 @@ type responseDegenerative struct {
 	Values degenerative `json:"values"`
 	Total  float64      `json:"total"`
 }
-type Assets struct {
-	Ugas    []AssetInstance
-	Ustonks []AssetInstance
-}
-type AssetInstance struct {
-	Name       string
-	Cycle      string
-	Year       string
-	Collateral string
-	Token      Token
-	Emp        Emp
-	Pool       Pool
-	Apr        AprData
-}
-type Emp struct {
-	Address string
-	New     bool
-}
-type Pool struct {
-	Address string
-}
-type AprData struct {
-	Force int
-	Extra int
-}
-type Token struct {
-	Address  string
-	Decimals int
-}
 
 func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
@@ -123,51 +94,8 @@ func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 }
 func TvlYam(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(contractAddress.ContractIncentivizer)
 
-		eth_rebaserContract, err := eth_rebaser.NewEthRebaser(common.HexToAddress(contractAddress.Eth_rebaser), geth)
-		if err != nil {
-			log.Fatalf("failed to instantiate contract: %v", err)
-		}
-		masterChefContract, err := masterchef.NewMasterchef(common.HexToAddress(contractAddress.Masterchef), geth)
-		if err != nil {
-			log.Fatalf("failed to instantiate contract: %v", err)
-		}
-		slpContract, err := slp.NewSlp(common.HexToAddress(contractAddress.Slp), geth)
-		if err != nil {
-			log.Fatalf("failed to instantiate contract: %v", err)
-		}
-
-		yamPrice, err := eth_rebaserContract.GetCurrentTWAP(&bind.CallOpts{})
-		if err != nil {
-			log.Fatalf("failed to get yamprice: %v", err)
-		}
-		userInfo, err := masterChefContract.UserInfo(&bind.CallOpts{}, big.NewInt(44), common.HexToAddress(contractAddress.ContractIncentivizer))
-		if err != nil {
-			log.Fatalf("failed to get amount: %v", err)
-		}
-		fmt.Println(userInfo)
-		totalSLPSupply, err := slpContract.TotalSupply(&bind.CallOpts{})
-		if err != nil {
-			log.Fatalf("failed to get totalSLPSupply: %v", err)
-		}
-		totalSLPReserves, err := slpContract.GetReserves(&bind.CallOpts{})
-		if err != nil {
-			log.Fatalf("failed to get totalSLPReserves: %v", err)
-		}
-
-		yamValue := utils.BnToDec(totalSLPReserves.Reserve0, 18)
-		ethValue := utils.BnToDec(totalSLPReserves.Reserve1, 18)
-
-		yamPriceFloat := utils.BnToDec(yamPrice, 18)
-		totalIncentivizerValue := userInfo.Amount
-		wethPrice := utils.GetWETHPrice()
-
-		temp1 := new(big.Float).Quo(new(big.Float).SetInt(totalIncentivizerValue), new(big.Float).SetInt(totalSLPSupply))
-		temp2 := new(big.Float).Add(new(big.Float).Mul(ethValue, wethPrice), new(big.Float).Mul(yamValue, yamPriceFloat))
-		temp3 := new(big.Float).Mul(temp1, temp2)
-		val, _ := temp3.Float64()
-		tvl := math.Round(val)
+		tvl := CalculateTvlYam(geth)
 		//mapD := map[string]float64{"values": tvl, "total": tvl}
 		response := &responseYam{
 			Values: yam{Farm: tvl},
@@ -221,4 +149,50 @@ func CalculateTvlDegenerative(empcontractAddress string, geth *ethclient.Client,
 	wb := utils.BnToDec(wethBalance, 18)
 	result, _ := new(big.Float).Mul(wethPrice, wb).Float64()
 	return result
+}
+func CalculateTvlYam(geth *ethclient.Client) float64 {
+	eth_rebaserContract, err := eth_rebaser.NewEthRebaser(common.HexToAddress(contractAddress.Eth_rebaser), geth)
+	if err != nil {
+		log.Fatalf("failed to instantiate contract: %v", err)
+	}
+	masterChefContract, err := masterchef.NewMasterchef(common.HexToAddress(contractAddress.Masterchef), geth)
+	if err != nil {
+		log.Fatalf("failed to instantiate contract: %v", err)
+	}
+	slpContract, err := slp.NewSlp(common.HexToAddress(contractAddress.Slp), geth)
+	if err != nil {
+		log.Fatalf("failed to instantiate contract: %v", err)
+	}
+
+	yamPrice, err := eth_rebaserContract.GetCurrentTWAP(&bind.CallOpts{})
+	if err != nil {
+		log.Fatalf("failed to get yamprice: %v", err)
+	}
+	userInfo, err := masterChefContract.UserInfo(&bind.CallOpts{}, big.NewInt(44), common.HexToAddress(contractAddress.ContractIncentivizer))
+	if err != nil {
+		log.Fatalf("failed to get amount: %v", err)
+	}
+
+	totalSLPSupply, err := slpContract.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		log.Fatalf("failed to get totalSLPSupply: %v", err)
+	}
+	totalSLPReserves, err := slpContract.GetReserves(&bind.CallOpts{})
+	if err != nil {
+		log.Fatalf("failed to get totalSLPReserves: %v", err)
+	}
+
+	yamValue := utils.BnToDec(totalSLPReserves.Reserve0, 18)
+	ethValue := utils.BnToDec(totalSLPReserves.Reserve1, 18)
+
+	yamPriceFloat := utils.BnToDec(yamPrice, 18)
+	totalIncentivizerValue := userInfo.Amount
+	wethPrice := utils.GetWETHPrice()
+
+	temp1 := new(big.Float).Quo(new(big.Float).SetInt(totalIncentivizerValue), new(big.Float).SetInt(totalSLPSupply))
+	temp2 := new(big.Float).Add(new(big.Float).Mul(ethValue, wethPrice), new(big.Float).Mul(yamValue, yamPriceFloat))
+	temp3 := new(big.Float).Mul(temp1, temp2)
+	val, _ := temp3.Float64()
+	tvl := math.Round(val)
+	return tvl
 }
