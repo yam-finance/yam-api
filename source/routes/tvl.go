@@ -42,7 +42,6 @@ type responseDegenerative struct {
 
 func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(contractAddress.ContractIncentivizer)
 
 		eth_rebaserContract, err := eth_rebaser.NewEthRebaser(common.HexToAddress(contractAddress.Eth_rebaser), geth)
 		if err != nil {
