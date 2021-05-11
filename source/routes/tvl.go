@@ -221,5 +221,4 @@ func CalculateTvlDegenerative(empcontractAddress string, geth *ethclient.Client,
 	wb := utils.BnToDec(wethBalance, 18)
 	result, _ := new(big.Float).Mul(wethPrice, wb).Float64()
 	return result
-
 }
