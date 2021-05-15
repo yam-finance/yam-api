@@ -1,113 +1,113 @@
 package routes
 
 import (
-	"net/http"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
+	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"time"
-	"math/big"
-	"strconv"
 	"os"
+	"strconv"
+	"time"
 
 	"yam-api/source/config"
 	"yam-api/source/utils"
-	"yam-api/source/utils/log"
-	"yam-api/source/utils/etherscan/reflect"
 	"yam-api/source/utils/etherscan/helper"
+	"yam-api/source/utils/etherscan/reflect"
 	"yam-api/source/utils/etherscan/response"
+	"yam-api/source/utils/log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 )
 
-/// -------- Types --------
-
-// @dev Ethereum network type
-type Network string
-
-// @dev API client struct
-type Client struct {
-	coon    *http.Client
-	key     string
-	baseURL string
-
-	// @dev True to get more log information.
-	Verbose bool
-
-	// @dev Runs before every client request, usually to check the rate limit.
-	BeforeRequest func(module, action string, param map[string]interface{}) error
-
-	// @dev Runs after every client request, even when there is an error.
-	AfterRequest func(module, action string, param map[string]interface{}, outcome interface{}, requestErr error)
-}
-
-// @dev Customization for NewCustomized function.
-type Customization struct {
-	// @dev Timeout for API call.
-	Timeout time.Duration
-	// @dev API key
-	Key string
-	// @dev Base URL
-	BaseURL string
-	// @dev True to get more log information.
-	Verbose bool
-
-	// @dev Runs before every client request, usually to check the rate limit.
-	BeforeRequest func(module, action string, param map[string]interface{}) error
-
-	// @dev Runs after every client request, even when there is an error.
-	AfterRequest func(module, action string, param map[string]interface{}, outcome interface{}, requestErr error)
-}
-
-// @dev Bucket is a simple rate limiter
-type Bucket struct {
-	bucket     chan bool
-	refillTime time.Duration
-}
-
-/// -------- Variables --------
+// --------- Variables ---------
 
 var (
-	// @dev API test client
+	/// @dev API test client
 	api *Client
-	// @dev Bucket rate limiter
+	/// @dev Bucket rate limiter
 	bucket *Bucket
-	// @dev Etherscan API key
+	/// @dev Etherscan API key
 	apiKey string
 )
 
 const (
 	Mainnet Network = "api"
 	Ropsten Network = "api-ropsten"
-	Kovan Network = "api-kovan"
+	Kovan   Network = "api-kovan"
 	Rinkeby Network = "api-rinkeby"
 )
 
-/// -------- Base functions --------
+// --------- Types ---------
 
-// @dev Returns the subdomain of etherscan API
-func (n Network) SubDomain() (sub string)  {
+/// @dev Ethereum network type
+type Network string
+
+/// @dev API client struct
+type Client struct {
+	coon    *http.Client
+	key     string
+	baseURL string
+
+	/// @dev True to get more log information.
+	Verbose bool
+
+	/// @dev Runs before every client request, usually to check the rate limit.
+	BeforeRequest func(module, action string, param map[string]interface{}) error
+
+	/// @dev Runs after every client request, even when there is an error.
+	AfterRequest func(module, action string, param map[string]interface{}, outcome interface{}, requestErr error)
+}
+
+/// @dev Customization for NewCustomized function.
+type Customization struct {
+	/// @dev Timeout for API call.
+	Timeout time.Duration
+	/// @dev API key
+	Key string
+	/// @dev Base URL
+	BaseURL string
+	/// @dev True to get more log information.
+	Verbose bool
+
+	/// @dev Runs before every client request, usually to check the rate limit.
+	BeforeRequest func(module, action string, param map[string]interface{}) error
+
+	/// @dev Runs after every client request, even when there is an error.
+	AfterRequest func(module, action string, param map[string]interface{}, outcome interface{}, requestErr error)
+}
+
+/// @dev Bucket is a simple rate limiter
+type Bucket struct {
+	bucket     chan bool
+	refillTime time.Duration
+}
+
+// --------- Base Functions ---------
+
+/// @dev Returns the subdomain of etherscan API
+func (n Network) SubDomain() (sub string) {
 	return string(n)
 }
 
-// @dev Initialize a new etherscan API client
+/// @dev Initialize a new etherscan API client
 func New(network Network, APIKey string) *Client {
-	return NewCustomized(Customization {
+	return NewCustomized(Customization{
 		Timeout: 30 * time.Second,
 		Key:     APIKey,
-		BaseURL: fmt.Sprintf(`https://%s.etherscan.io/api?`, network.SubDomain()),
+		BaseURL: fmt.Sprintf(`https:///%s.etherscan.io/api?`, network.SubDomain()),
 	})
 }
 
-// @dev Initialize a new customized API client, usually to call other API's.
+/// @dev Initialize a new customized API client, usually to call other API's.
 func NewCustomized(config Customization) *Client {
-	return &Client {
-		coon: &http.Client {
+	return &Client{
+		coon: &http.Client{
 			Timeout: config.Timeout,
 		},
 		key:           config.Key,
@@ -118,9 +118,9 @@ func NewCustomized(config Customization) *Client {
 	}
 }
 
-// @dev Function that takes care of the actual API call.
+/// @dev Function that takes care of the actual API call.
 func (c *Client) call(module, action string, param map[string]interface{}, outcome interface{}) (err error) {
-	// @dev Call hooks if declared.
+	/// @dev Call hooks if declared.
 	if c.BeforeRequest != nil {
 		err = c.BeforeRequest(module, action, param)
 		if err != nil {
@@ -133,7 +133,7 @@ func (c *Client) call(module, action string, param map[string]interface{}, outco
 		defer c.AfterRequest(module, action, param, outcome, err)
 	}
 
-	// @dev Recover if panic was thrown.
+	/// @dev Recover if panic was thrown.
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("[ouch! panic recovered] please report this with what you did and what you expected, panic detail: %v", r)
@@ -213,7 +213,7 @@ func (c *Client) call(module, action string, param map[string]interface{}, outco
 		return
 	}
 
-	// @dev Workaround for missing tokenDecimal for some token transfer calls.
+	/// @dev Workaround for missing tokenDecimal for some token transfer calls.
 	if action == "tokentx" {
 		err = json.Unmarshal(bytes.Replace(envelope.Result, []byte(`"tokenDecimal":""`), []byte(`"tokenDecimal":"0"`), -1), outcome)
 	} else {
@@ -228,7 +228,7 @@ func (c *Client) call(module, action string, param map[string]interface{}, outco
 	return
 }
 
-// @dev Returns URL built with provided params.
+/// @dev Returns URL built with provided params.
 func (c *Client) craftURL(module, action string, param map[string]interface{}) (URL string) {
 	q := url.Values{
 		"module": []string{module},
@@ -245,11 +245,11 @@ func (c *Client) craftURL(module, action string, param map[string]interface{}) (
 	return
 }
 
-/// -------- Call Setup --------
+// --------- Call Setup ---------
 
-// @dev Bucket factory
+/// @dev Bucket factory
 func NewBucket(refillTime time.Duration) (b *Bucket) {
-	b = &Bucket {
+	b = &Bucket{
 		bucket:     make(chan bool),
 		refillTime: refillTime,
 	}
@@ -259,12 +259,12 @@ func NewBucket(refillTime time.Duration) (b *Bucket) {
 	return
 }
 
-// @dev Blocks if there is currently no action token left.
+/// @dev Blocks if there is currently no action token left.
 func (b *Bucket) Take() {
 	<-b.bucket
 }
 
-// @dev Fill an action token into bucket.
+/// @dev Fill an action token into bucket.
 func (b *Bucket) fill() {
 	b.bucket <- true
 }
@@ -295,11 +295,11 @@ func (c *Client) setup(apiKey string) {
 	}
 }
 
-/// -------- Calls --------
+// --------- Calls ---------
 
-// @dev Get a list of "normal" transactions by address
+/// @dev Get a list of "normal" transactions by address
 func (c *Client) NormalTxByAddress(address string, startBlock *int, endBlock *int, page int, offset int, desc bool) (txs []response.Tx, err error) {
-	param := helper.M {
+	param := helper.M{
 		"address": address,
 		"page":    page,
 		"offset":  offset,
@@ -319,9 +319,9 @@ func (c *Client) NormalTxByAddress(address string, startBlock *int, endBlock *in
 	return
 }
 
-// @dev Get a list of "erc20 - token transfer events" by address
+/// @dev Get a list of "erc20 - token transfer events" by address
 func (c *Client) ERC20Transfers(contractAddress, address *string, startBlock *int, endBlock *int, page int, offset int, desc bool) (txs []response.Tx, err error) {
-	param := helper.M {
+	param := helper.M{
 		"page":   page,
 		"offset": offset,
 	}
@@ -343,9 +343,9 @@ func (c *Client) ERC20Transfers(contractAddress, address *string, startBlock *in
 }
 
 func (c *Client) GetBlockNumberByTimestamp(timestamp int, closest string) (blockNumber string, err error) {
-	param := helper.M {
+	param := helper.M{
 		"timestamp": timestamp,
-		"closest": closest,
+		"closest":   closest,
 	}
 
 	err = c.call("block", "getblocknobytime", param, &blockNumber)
@@ -370,7 +370,7 @@ func GetERC20Transfers(accountAddress string, startBlock int, endBlock int) (txs
 
 func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		/// @dev Load .env file
+		//// @dev Load .env file
 		err := godotenv.Load(".env")
 		if err != nil {
 			log.Error("Error loading .env file")
@@ -383,16 +383,16 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		address := query.Get("address")
 		startTime := query.Get("startTimeStamp")
 		endTime := query.Get("endTimeStamp")
-		
+
 		accountAddress := address
 		startTimeStamp, _ := strconv.Atoi(startTime)
 		endTimeStamp, _ := strconv.Atoi(endTime)
 
-		// @dev Build startBlock
+		/// @dev Build startBlock
 		block, blockNumberErr := api.GetBlockNumberByTimestamp(startTimeStamp, "after")
 		startBlock, _ := strconv.Atoi(block)
 
-		// @dev Build endBlock
+		/// @dev Build endBlock
 		block, blockNumberErr = api.GetBlockNumberByTimestamp(endTimeStamp, "before")
 		endBlock, _ := strconv.Atoi(block)
 
@@ -408,7 +408,7 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		failedTxsFromAddress := utils.FilterArray(txsFromAddress, func(val response.Tx) bool {
 			return val.IsError != 0 // 0 = No Error, 1 = Got Error.
 		})
-		
+
 		// Success Calculation
 		txCount := len(txsFromAddress)
 		var gasUsedArray []int
@@ -430,13 +430,12 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		var averageTxPrice *big.Int
 		var averageTxPriceGWEI *big.Float
 
-		if (txCount > 0) {
+		if txCount > 0 {
 			// Success Calculation
-
 			for i := 0; i < txCount; i++ {
 				gasUsedArray = append(gasUsedArray, txsFromAddress[i].GasUsed)
 			}
-		
+
 			for i := 0; i < txCount; i++ {
 				gasPriceArray = append(gasPriceArray, txsFromAddress[i].GasPrice)
 			}
@@ -447,17 +446,16 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 			}
 
 			for i := 0; i < len(gasFeeArray); i++ {
-				totalGasFee.Add(totalGasFee, gasFeeArray[i])  
+				totalGasFee.Add(totalGasFee, gasFeeArray[i])
 			}
 
 			totalGasFeeETH = utils.BnToDec(totalGasFee, 18)
 
 			// Failed Calculation
-
 			for i := 0; i < failedTxCount; i++ {
 				failedGasUsedArray = append(failedGasUsedArray, failedTxsFromAddress[i].GasUsed)
 			}
-		
+
 			for i := 0; i < failedTxCount; i++ {
 				failedGasPriceArray = append(failedGasPriceArray, failedTxsFromAddress[i].GasPrice)
 			}
@@ -468,22 +466,21 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 			}
 
 			for i := 0; i < len(failedGasFeeArray); i++ {
-				totalFailedGasFee.Add(totalFailedGasFee, failedGasFeeArray[i])  
+				totalFailedGasFee.Add(totalFailedGasFee, failedGasFeeArray[i])
 			}
 
 			totalFailedGasFeeETH = utils.BnToDec(totalFailedGasFee, 18)
 
 			// Average Calculation
-
 			for i := 0; i < len(gasPriceArray); i++ {
-				totalGasPrice.Add(totalGasPrice, gasPriceArray[i].Int())  
+				totalGasPrice.Add(totalGasPrice, gasPriceArray[i].Int())
 			}
 
 			averageTxPrice = totalGasPrice.Div(totalGasPrice, new(big.Int).SetInt64(int64(txCount)))
 			averageTxPriceGWEI = utils.BnToDec(averageTxPrice, 9)
 		}
 
-		// @dev Log error messages.
+		/// @dev Log error messages.
 		if normalTxsErr != nil {
 			log.Error(normalTxsErr)
 		} else if erc20TxsErr != nil {
@@ -493,12 +490,12 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		}
 
 		utils.ResJSON(http.StatusCreated, w,
-			map[string] interface{} {
-				"txCount": txCount,
-				"failedTxCount": failedTxCount,
-				"totalGasFeeETH": string(totalGasFeeETH.String()),
+			map[string]interface{}{
+				"txCount":              txCount,
+				"failedTxCount":        failedTxCount,
+				"totalGasFeeETH":       string(totalGasFeeETH.String()),
 				"totalFailedGasFeeETH": string(totalFailedGasFeeETH.String()),
-				"averageTxPriceGWEI": averageTxPriceGWEI.String(),
+				"averageTxPriceGWEI":   averageTxPriceGWEI.String(),
 			},
 		)
 	})
