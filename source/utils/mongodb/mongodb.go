@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,8 +27,19 @@ type AprDegenerative struct {
 }
 
 func Connect() {
-	uri := "mongodb://localhost:27017/ugasmedian?readPreference=primary&appname=MongoDB%20Compass&ssl=false"
 	var err error
+	err = godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbName := os.Getenv("DB_NAME")
+	dbURI := os.Getenv("URI")
+
+	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
+	fmt.Println(uri)
 	client, err = mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Fatal("Client", err)
@@ -36,7 +49,6 @@ func Connect() {
 	if err != nil {
 		log.Fatal("Connect", err)
 	}
-	//defer client.Disconnect(ctx)
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		log.Fatal("Ping", err)
@@ -53,9 +65,7 @@ func InsertAprYam(val float64) {
 		result := AprYam{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database("ugasmedian")
-		punkCollection := databaseRef.Collection("apryam")
-		// result := punkCollection.FindOne(context.TODO(), bson.D{})
-		//punkCollection.FindOneAndUpdate()
+		aprYamCollection := databaseRef.Collection("apryam")
 		update := bson.M{
 			"$set": bson.M{"apryam": val},
 		}
@@ -65,32 +75,19 @@ func InsertAprYam(val float64) {
 			ReturnDocument: &after,
 			Upsert:         &upsert,
 		}
-		er := punkCollection.FindOneAndUpdate(ctx, bson.M{}, update, &opt).Decode(&result)
+		er := aprYamCollection.FindOneAndUpdate(ctx, bson.M{}, update, &opt).Decode(&result)
 		if er != nil {
 			fmt.Println(er)
 			return
 		}
-
-		//	fmt.Println(result.Value)
-		// uPunksResult, err := punkCollection.InsertOne(ctx, bson.D{
-		// 	{Key: "apryam", Value: val},
-		// })
-
-		// fmt.Println(uPunksResult)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
 	}
-
 }
 func InsertAprDegenerative(val map[string]float64) {
 	if client != nil {
 		result := AprDegenerative{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database("ugasmedian")
-		punkCollection := databaseRef.Collection("aprdegenerative")
-		// result := punkCollection.FindOne(context.TODO(), bson.D{})
-		//punkCollection.FindOneAndUpdate()
+		aprYamDegenerativeCollection := databaseRef.Collection("aprdegenerative")
 		update := bson.M{
 			"$set": bson.M{"aprdegenerative": val},
 		}
@@ -100,79 +97,42 @@ func InsertAprDegenerative(val map[string]float64) {
 			ReturnDocument: &after,
 			Upsert:         &upsert,
 		}
-		er := punkCollection.FindOneAndUpdate(ctx, bson.M{}, update, &opt).Decode(&result)
+		er := aprYamDegenerativeCollection.FindOneAndUpdate(ctx, bson.M{}, update, &opt).Decode(&result)
 		if er != nil {
 			fmt.Println(er)
 			return
 		}
-
-		//	fmt.Println(result.Value)
-		// uPunksResult, err := punkCollection.InsertOne(ctx, bson.D{
-		// 	{Key: "apryam", Value: val},
-		// })
-
-		// fmt.Println(uPunksResult)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
 	}
-
 }
 func GetAprYam() float64 {
 	if client != nil {
 		result := AprYam{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database("ugasmedian")
-		punkCollection := databaseRef.Collection("apryam")
-		// result := punkCollection.FindOne(context.TODO(), bson.D{})
-		//punkCollection.FindOneAndUpdate()
-
-		er := punkCollection.FindOne(ctx, bson.M{}).Decode(&result)
+		aprYamCollection := databaseRef.Collection("apryam")
+		er := aprYamCollection.FindOne(ctx, bson.M{}).Decode(&result)
 		if er != nil {
 			fmt.Println(er)
 			return 0
 		}
-
 		fmt.Println(result.Value)
-		// uPunksResult, err := punkCollection.InsertOne(ctx, bson.D{
-		// 	{Key: "apryam", Value: val},
-		// })
-
-		// fmt.Println(uPunksResult)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
 		return result.Value
 	}
 	return 0
-
 }
 func GetAprDegenerative() map[string]float64 {
 	if client != nil {
 		result := AprDegenerative{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database("ugasmedian")
-		punkCollection := databaseRef.Collection("aprdegenerative")
-		// result := punkCollection.FindOne(context.TODO(), bson.D{})
-		//punkCollection.FindOneAndUpdate()
-
-		er := punkCollection.FindOne(ctx, bson.M{}).Decode(&result)
+		aprYamDegenerativeCollection := databaseRef.Collection("aprdegenerative")
+		er := aprYamDegenerativeCollection.FindOne(ctx, bson.M{}).Decode(&result)
 		if er != nil {
 			fmt.Println(er)
 			return map[string]float64{"MAR21": 0, "JUN21": 0}
 		}
-
 		fmt.Println(result.Value)
-		// uPunksResult, err := punkCollection.InsertOne(ctx, bson.D{
-		// 	{Key: "apryam", Value: val},
-		// })
-
-		// fmt.Println(uPunksResult)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
 		return result.Value
 	}
 	return map[string]float64{"MAR21": 0, "JUN21": 0}
-
 }
