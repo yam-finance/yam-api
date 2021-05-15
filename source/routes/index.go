@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"yam-api/source/config"
 	"yam-api/source/utils"
+	"yam-api/source/utils/mongodb"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
@@ -24,6 +25,7 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 		MaxAge:           300,
 	})
 
+	mongodb.Connect()
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(cors.Handler)
@@ -39,6 +41,10 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 
 	// Account
 	GasStats("/account-stats", router, conf, geth)
+
+	// uPUNK
+	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)
+	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)
 
 	return router
 }
