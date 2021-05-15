@@ -11,6 +11,7 @@ import (
 	"time"
 	"math/big"
 	"strconv"
+	"os"
 
 	"yam-api/source/config"
 	"yam-api/source/utils"
@@ -372,7 +373,7 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		/// @dev Load .env file
 		err := godotenv.Load(".env")
 		if err != nil {
-			log.Fatalf("Error loading .env file")
+			log.Error("Error loading .env file")
 		}
 
 		etherscanKey := os.Getenv("ETHERSCAN_KEY")
