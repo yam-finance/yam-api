@@ -17,3 +17,5 @@
 start
 .vscode
 .idea
+
+.env
