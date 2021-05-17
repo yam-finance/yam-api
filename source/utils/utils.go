@@ -6,12 +6,10 @@ import (
 	"math"
 	"math/big"
 	"net/http"
-	"math"
-	"math/big"
 	"reflect"
 	"strings"
-	"yam-api/source/utils/log"
 	"yam-api/source/utils/etherscan/response"
+	"yam-api/source/utils/log"
 )
 
 var AddressMap = "adsf"
@@ -98,6 +96,9 @@ func FilterArray(arr []response.Tx, cond func(response.Tx) bool) []response.Tx {
 			result = append(result, arr[i])
 		}
 	}
+
+	return result
+}
 
 func GetWETHPrice() *big.Float {
 	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/weth")
