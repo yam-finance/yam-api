@@ -14,6 +14,9 @@ require (
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/robfig/cron v1.2.0
+	github.com/montanaflynn/stats v0.6.6
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/shopspring/decimal v1.2.0
 	go.mongodb.org/mongo-driver v1.5.2
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0
