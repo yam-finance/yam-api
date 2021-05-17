@@ -12,7 +12,6 @@ import (
 	"yam-api/source/utils/log"
 )
 
-var AddressMap = "adsf"
 
 func ResError(code int, w http.ResponseWriter, msg string) {
 	ResJSON(code, w, map[string]interface{}{"code": code, "message": msg})
