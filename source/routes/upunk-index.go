@@ -181,14 +181,14 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 					punkBoughtEventData, err := contractAbi.Unpack("PunkBought", vLog.Data)
 					if err != nil {
 						log.Error("PunkBought", err)
+					} else {
+						var price interface{} = punkBoughtEventData[0]
+						priceStr := fmt.Sprintf("%v", price)
+						info["price"] = priceStr
+
+						punkSales = append(punkSales, info)
+						// punkSales[_punkIndex] = info
 					}
-
-					var price interface{} = punkBoughtEventData[0]
-					priceStr := fmt.Sprintf("%v", price)
-					info["price"] = priceStr
-
-					punkSales = append(punkSales, info)
-					// punkSales[_punkIndex] = info
 				} else if reflect.DeepEqual(*method, bidMethod) {
 					for i, _ := range bidLogs {
 						if len(bidLogs[i]) == 0 {
@@ -209,12 +209,12 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 							punkBidEnteredEventData, err := contractAbi.Unpack("PunkBidEntered", vLog.Data)
 							if err != nil {
 								log.Error("PunkBidEntered", err)
+							} else {
+								var price interface{} = punkBidEnteredEventData[0]
+								priceStr := fmt.Sprintf("%v", price)
+
+								info["price"] = priceStr
 							}
-
-							var price interface{} = punkBidEnteredEventData[0]
-							priceStr := fmt.Sprintf("%v", price)
-
-							info["price"] = priceStr
 						}
 					}
 
