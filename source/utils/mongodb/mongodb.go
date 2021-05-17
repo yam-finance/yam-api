@@ -18,19 +18,6 @@ import (
 )
 
 var client *mongo.Client
-func Connect() {
-	var err error
-	err = godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-	dbUser := os.Getenv("DB_USER")
-	dbPass := os.Getenv("DB_PASS")
-	dbName := os.Getenv("DB_NAME")
-	dbURI := os.Getenv("URI")
-
-	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
-	fmt.Println(uri)
 var dbUser string
 var dbPass string
 var dbName string
@@ -42,13 +29,13 @@ type PunkIndex struct {
 	timestamp string             `bson:"timestamp"`
 }
 
-// --------- MongoDB Connection ---------
-
 func Connect() {
 	/// @dev Load .env file
-	envErr := godotenv.Load(".env")
-	if envErr != nil {
-		log.Fatalf("Error loading .env file")
+	if _, err := os.Stat(".env"); err == nil || os.IsExist(err) {
+		envErr := godotenv.Load(".env")
+		if envErr != nil {
+			log.Fatalf("Error loading .env file")
+		}
 	}
 
 	dbUser = os.Getenv("DB_USER")
@@ -77,8 +64,8 @@ func Connect() {
 		log.Fatal(err)
 	}
 	fmt.Println("Connected to MongoDB!")
-
 }
+
 func InsertAprYam(val float64) {
 	if client != nil {
 		result := AprYam{}
@@ -101,6 +88,7 @@ func InsertAprYam(val float64) {
 		}
 	}
 }
+
 func InsertAprDegenerative(val map[string]float64) {
 	if client != nil {
 		result := AprDegenerative{}
@@ -123,6 +111,7 @@ func InsertAprDegenerative(val map[string]float64) {
 		}
 	}
 }
+
 func GetAprYam() float64 {
 	if client != nil {
 		result := AprYam{}
@@ -139,6 +128,7 @@ func GetAprYam() float64 {
 	}
 	return 0
 }
+
 func GetAprDegenerative() map[string]float64 {
 	if client != nil {
 		result := AprDegenerative{}
@@ -154,11 +144,7 @@ func GetAprDegenerative() map[string]float64 {
 		return result.Value
 	}
 	return map[string]float64{"MAR21": 0, "JUN21": 0}
-
-	fmt.Println("Connected to MongoDB!")
 }
-
-// --------- MongoDB Calls ---------
 
 func InsertPunkIndex(val map[string]interface{}) {
 	if client != nil {
