@@ -14,9 +14,10 @@ import (
 	"yam-api/source/config"
 	"yam-api/source/contracts/cryptoPunksMarket"
 	"yam-api/source/utils"
-	"yam-api/source/utils/etherscan/helper"
+	"yam-api/source/utils/contractAddress"
 	"yam-api/source/utils/log"
 	"yam-api/source/utils/mongodb"
+	"yam-api/source/utils/web3Helper"
 
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -47,6 +48,7 @@ type PunkBidEntered struct {
 
 func Filter(geth *ethclient.Client, contractAddress common.Address, blockStart uint64, blockEnd uint64) [][]types.Log {
 	var logs [][]types.Log
+	/// @notice Infura can only handle 10_000 events at a time
 	nblocks := uint64(math.Floor(10_000 / 0.25))
 	var blockStarts []uint64
 
@@ -78,6 +80,7 @@ func Filter(geth *ethclient.Client, contractAddress common.Address, blockStart u
 
 func FilterWithTopic(geth *ethclient.Client, contractAddress common.Address, blockStart uint64, blockEnd uint64, topic common.Hash) [][]types.Log {
 	var logs [][]types.Log
+	/// @notice Infura can only handle 10_000 events at a time
 	nblocks := uint64(math.Floor(10_000 / 0.25))
 	var blockStarts []uint64
 
@@ -114,38 +117,44 @@ func FilterWithTopic(geth *ethclient.Client, contractAddress common.Address, blo
 
 func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 	PUNK_FIRST_BLOCK := 3914495
-	// @dev CryptoPunksMarket contract address
-	contractAddress := common.HexToAddress("0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB")
+	/// @dev CryptoPunksMarket contract address
+	contractAddress := common.HexToAddress(contractAddress.CryptoPunksMarket)
 	eval_ts := int(time.Now().UTC().Unix())
 	window := int(30 * 24 * 60 * 60)
 
-	blockStart := helper.GetBlockNumberByTimestamp(geth, uint64(eval_ts-window), "after")
-	blockEnd := helper.GetBlockNumberByTimestamp(geth, uint64(eval_ts), "after")
+	/// @dev Find the block start and end that we're interested in
+	blockStart := web3Helper.GetBlockNumberByTimestamp(geth, uint64(eval_ts-window), "after")
+	blockEnd := web3Helper.GetBlockNumberByTimestamp(geth, uint64(eval_ts), "after")
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(cryptoPunksMarket.CryptoPunksMarketABI)))
 	if err != nil {
 		log.Error(err)
 	}
 
-	// @dev Event Signatures
+	/// @dev Event Signatures
 	logPunkBoughtSig := []byte("PunkBought(uint256,uint256,address,address)")
 	logPunkBoughtSigHash := crypto.Keccak256Hash(logPunkBoughtSig)
 	logPunkBidEnteredSig := []byte("PunkBidEntered(uint256,uint256,address)")
 	logPunkBidEnteredSigHash := crypto.Keccak256Hash(logPunkBidEnteredSig)
 
+	/// @dev Retrieve all events
+	/// @notice This is needed since the PunkBought event is emitted from buyPunk and acceptBidForPunk
 	var boughtLogs [][]types.Log = Filter(geth, contractAddress, blockStart, blockEnd)
+	/// @dev Retrieve all PunkBidEntered events from the first punk block until the current block
 	var bidLogs [][]types.Log = FilterWithTopic(geth, contractAddress, uint64(PUNK_FIRST_BLOCK), blockEnd, logPunkBidEnteredSigHash)
 	var punkSales []map[string]string
 	// var punkSales = make(map[string]map[string]string)
 
 	for i, _ := range boughtLogs {
 		for _, vLog := range boughtLogs[i] {
+			/// @dev Filter event log for PunkBought events
 			switch vLog.Topics[0].Hex() {
 			case logPunkBoughtSigHash.Hex():
 
 				_punkIndex := vLog.Topics[1].Hex()
 				_blockNumber := vLog.BlockNumber
 
+				/// @dev Info map that stores the needed information for our index calculation
 				var info = make(map[string]string)
 				info["punkIndex"] = _punkIndex
 				info["blockNumber"] = strconv.FormatUint(_blockNumber, 10)
@@ -166,6 +175,7 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 				buyMethod := contractAbi.Methods["buyPunk"]
 				bidMethod := contractAbi.Methods["acceptBidForPunk"]
 
+				/// @dev Check from which function the PunkBought event has been emitted
 				if reflect.DeepEqual(*method, buyMethod) {
 					punkBoughtEventData, err := contractAbi.Unpack("PunkBought", vLog.Data)
 					if err != nil {
@@ -193,6 +203,7 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 						var punkBidEnteredEvent PunkEvent
 						punkBidEnteredEvent.punkIndex = vLog.Topics[1].Hex()
 
+						/// @dev Check if the acceptBidForPunk index is equal to the current punk index
 						if punkBidEnteredEvent.punkIndex == _punkIndex {
 							punkBidEnteredEventData, err := contractAbi.Unpack("PunkBidEntered", vLog.Data)
 							if err != nil {
@@ -218,11 +229,12 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 	var prices []float64
 	var uniqueSales = make(map[string]map[string]string)
 
+	/// @dev Filter only unique punk sales
 	for _, ps := range punkSales {
 		var currentValues = make(map[string]string)
 		var ok bool
 
-		// @dev Iterate over the uniqueSales mapping
+		/// @dev Iterate over the uniqueSales mapping
 		if currentValues, ok = uniqueSales[ps["punkIndex"]]; !ok {
 			currentValues = map[string]string{"blockNumber": "0", "price": "0"}
 		}
@@ -239,6 +251,7 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 		}
 	}
 
+	/// @dev Retrieve prices from unique punk sales
 	for _, us := range uniqueSales {
 		if us["price"] != "" {
 			priceFloat64, _ := strconv.ParseFloat(us["price"], 64)
@@ -250,7 +263,7 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 	// log.Info("UniqueSales", len(uniqueSales))
 	// log.Info("Prices", len(prices))
 
-	// @dev Index calculation
+	/// @dev Index calculation
 	floatMedian, _ := stats.Median(prices)
 	bigMedian := big.NewFloat(floatMedian)
 	upunkIndexWei := new(big.Float).Quo(bigMedian, big.NewFloat(1000000000000000000))

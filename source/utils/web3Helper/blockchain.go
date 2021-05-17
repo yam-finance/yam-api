@@ -1,4 +1,4 @@
-package helper
+package web3Helper
 
 import (
 	"context"
@@ -31,12 +31,15 @@ func GetBlockNumberByTimestamp(geth *ethclient.Client, ts uint64, direction stri
 		log.Error(err)
 	}
 
+	/// @dev Compute the average block time using the last 10_000 blocks
 	avgBlockTime := (currentBlock.Time() - cm100Block.Time()) / nBlocks.Uint64()
 
+	/// @dev If the timestamp is greater than the most recent block, return the most recent block
 	if ts > currentBlock.Time() {
 		return currentBlockNum
 	}
 
+	/// @dev Find bounds on where the block can live and check that it's inbetween the older/newer blocks
 	tsDelta := (currentBlock.Time() - ts)
 	blockNumOlder := math.Min(
 		float64(currentBlockNum)-math.Floor(float64(1.2)*(float64(tsDelta)/float64(avgBlockTime))),
@@ -62,6 +65,7 @@ func GetBlockNumberByTimestamp(geth *ethclient.Client, ts uint64, direction stri
 
 	var blockNumProposed float64
 
+	/// @dev Find oldest block with timestamp greater than or equal to ts
 	for true {
 		blockNumProposed = math.Floor((blockNumOlder + blockNumNewer) / 2)
 		blockNumProposedM1 := blockNumProposed - 1
