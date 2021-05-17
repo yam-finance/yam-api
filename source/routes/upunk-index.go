@@ -168,10 +168,10 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 
 				/// @dev Recover Method from tx input data
 				method, _ := contractAbi.MethodById(transaction.Data())
-				// if err != nil {
-				// 	log.Error(err)
-				// 	continue
-				// }
+				if err != nil {
+					// log.Error("method", err)
+					continue
+				}
 
 				buyMethod := contractAbi.Methods["buyPunk"]
 				bidMethod := contractAbi.Methods["acceptBidForPunk"]
