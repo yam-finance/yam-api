@@ -44,7 +44,7 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)
 	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)
 
-  // APR
+	// APR
 	Apr("/apr", router, conf, geth)
 	AprDegenerative("/apr/degenerative", router, conf, geth)
 

@@ -10,6 +10,7 @@ import (
 	"yam-api/source/utils/mongodb"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/robfig/cron"
 )
 
 func run() error {
@@ -26,6 +27,14 @@ func run() error {
 	}
 
 	mongodb.Connect()
+
+	/// @dev Set up cron for uPUNK Index
+	calculatePunkIndexCron := cron.New()
+	calculatePunkIndexCron.AddFunc("@every 5m", func() {
+		values := routes.CalculatePunkIndex(geth)
+		mongodb.InsertPunkIndex(values)
+	})
+	calculatePunkIndexCron.Start()
 
 	routes := routes.Initialize(conf, geth)
 	return source.Serve(conf, routes)

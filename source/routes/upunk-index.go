@@ -25,14 +25,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
 	"github.com/montanaflynn/stats"
-	"github.com/robfig/cron"
 
 	store "yam-api/source/contracts"
 )
-
-// --------- Variables ---------
-
-var calculatePunkIndexCron *cron.Cron
 
 // --------- Types ---------
 
@@ -274,17 +269,6 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 
 func GetLatestPunkIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-
-		/// @dev Set up cron
-		if calculatePunkIndexCron == nil {
-			calculatePunkIndexCron := cron.New()
-			calculatePunkIndexCron.AddFunc("@every 5m", func() {
-				values := CalculatePunkIndex(geth)
-				mongodb.InsertPunkIndex(values)
-			})
-			calculatePunkIndexCron.Start()
-		}
-
 		/// @dev Retrieve values from db
 		values := mongodb.GetLatestPunkIndex()
 		if values == nil {
@@ -310,17 +294,6 @@ func GetLatestPunkIndex(path string, router chi.Router, conf *config.Config, get
 
 func GetPunkIndexHistory(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-
-		/// @dev Set up cron
-		if calculatePunkIndexCron == nil {
-			calculatePunkIndexCron := cron.New()
-			calculatePunkIndexCron.AddFunc("@every 5m", func() {
-				values := CalculatePunkIndex(geth)
-				mongodb.InsertPunkIndex(values)
-			})
-			calculatePunkIndexCron.Start()
-		}
-
 		/// @dev Retrieve values from db
 		history := mongodb.GetPunkIndexHistoryDaily()
 		if history == nil {
