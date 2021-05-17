@@ -30,7 +30,6 @@ type PunkIndex struct {
 }
 
 func Connect() {
-
 	/// @dev Load .env file
 	if _, err := os.Stat(".env"); err == nil || os.IsExist(err) {
 		envErr := godotenv.Load(".env")
@@ -43,11 +42,6 @@ func Connect() {
 	dbPass = os.Getenv("DB_PASS")
 	dbName = os.Getenv("DB_NAME")
 	dbURI = os.Getenv("URI")
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
 
 	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
 
@@ -67,7 +61,7 @@ func Connect() {
 	}
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("DB Connection Error", err)
 	}
 	fmt.Println("Connected to MongoDB!")
 }
@@ -164,7 +158,7 @@ func InsertPunkIndex(val map[string]interface{}) {
 			{Key: "timestamp", Value: val["timestamp"]},
 		})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("InsertPunkIndex", err)
 		}
 	}
 }
@@ -186,12 +180,12 @@ func GetLatestPunkIndex() map[string]interface{} {
 		// @dev Find last document in collection
 		filterCursor, err := punkCollection.Find(ctx, bson.M{})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("Latest Index filterCursor", err)
 			return nil
 		}
 		var resultsFiltered []bson.M
 		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
-			log.Fatal(err)
+			log.Fatal("Latest Index resultsFiltered", err)
 			return nil
 		} else if len(resultsFiltered) == 0 {
 			return nil
@@ -220,12 +214,12 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 		// @dev Find last document in collection
 		filterCursor, err := punkCollection.Find(ctx, bson.M{})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("Index history filterCursor", err)
 			return nil
 		}
 		var resultsFiltered []bson.M
 		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
-			log.Fatal(err)
+			log.Fatal("Index history resultsFiltered", err)
 			return nil
 		}
 
