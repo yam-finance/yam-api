@@ -131,7 +131,7 @@ func GetLatestPunkIndex() map[string]interface{} {
 	}
 }
 
-func GetPunkIndexHistoryDaily() []interface{} {
+func GetPunkIndexHistoryDaily() []map[string]interface{} {
 	if client != nil {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
@@ -149,7 +149,7 @@ func GetPunkIndexHistoryDaily() []interface{} {
 			return nil
 		}
 
-		var values []interface{}
+		var values []map[string]interface{}
 		dayCount := 0
 
 		for _, result := range resultsFiltered {

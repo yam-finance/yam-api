@@ -167,11 +167,11 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 				}
 
 				/// @dev Recover Method from tx input data
-				method, err := contractAbi.MethodById(transaction.Data())
-				if err != nil {
-					log.Error(err)
-					continue
-				}
+				method, _ := contractAbi.MethodById(transaction.Data())
+				// if err != nil {
+				// 	log.Error(err)
+				// 	continue
+				// }
 
 				buyMethod := contractAbi.Methods["buyPunk"]
 				bidMethod := contractAbi.Methods["acceptBidForPunk"]
@@ -285,8 +285,8 @@ func GetLatestPunkIndex(path string, router chi.Router, conf *config.Config, get
 		values := mongodb.GetLatestPunkIndex()
 		if values == nil {
 			values = map[string]interface{}{
-				"price":     "No value stored.",
-				"timestamp": "No value stored.",
+				"price":     "0",
+				"timestamp": "0",
 			}
 		}
 
@@ -309,7 +309,12 @@ func GetPunkIndexHistory(path string, router chi.Router, conf *config.Config, ge
 		/// @dev Retrieve values from db
 		history := mongodb.GetPunkIndexHistoryDaily()
 		if history == nil {
-			history = []interface{}{"No values stored."}
+			history = []map[string]interface{}{
+				{
+					"price":     "0",
+					"timestamp": "0",
+				},
+			}
 		}
 
 		utils.ResJSON(http.StatusCreated, w,
