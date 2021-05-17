@@ -28,13 +28,29 @@ func run() error {
 
 	mongodb.Connect()
 
-	/// @dev Set up cron for uPUNK Index
+	/// @dev Set up cron for CalculatePunkIndex
 	calculatePunkIndexCron := cron.New()
 	calculatePunkIndexCron.AddFunc("@every 5m", func() {
 		values := routes.CalculatePunkIndex(geth)
 		mongodb.InsertPunkIndex(values)
 	})
 	calculatePunkIndexCron.Start()
+
+	/// @dev Set up cron for getAprYamCron
+	getAprYamCron := cron.New()
+	getAprYamCron.AddFunc("@every 2m", func() {
+		val := routes.CalculateAprYam(geth)
+		routes.StoreAprYam(val)
+	})
+	getAprYamCron.Start()
+
+	/// @dev Set up cron for getAprDegenerativeCron
+	getAprDegenerativeCron := cron.New()
+	getAprDegenerativeCron.AddFunc("@every 2m", func() {
+		response := routes.CalculateAprDegenerative(geth)
+		routes.StoreAprDegenerative(response.UGAS)
+	})
+	getAprDegenerativeCron.Start()
 
 	routes := routes.Initialize(conf, geth)
 	return source.Serve(conf, routes)
