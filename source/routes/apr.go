@@ -14,63 +14,26 @@ import (
 	"yam-api/source/config"
 	emp "yam-api/source/contracts/emp"
 	erc20 "yam-api/source/contracts/erc20"
+	eth_rebaser "yam-api/source/contracts/eth_rebaser"
 	uni "yam-api/source/contracts/uni"
 	unifact "yam-api/source/contracts/unifact"
+	yamv3 "yam-api/source/contracts/yamv3"
 	"yam-api/source/utils"
 	"yam-api/source/utils/contractAddress"
+	"yam-api/source/utils/mongodb"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
+	"github.com/robfig/cron"
 )
 
-type Assets struct {
-	Ugas    []AssetInstance
-	Ustonks []AssetInstance
-}
-type Asset struct {
-	AssetName     string
-	AssetInstance AssetInstance
-	AssetPrice    *big.Float
-}
-type AssetInstance struct {
-	Name       string
-	Cycle      string
-	Year       string
-	Collateral string
-	Token      Token
-	Emp        Emp
-	Pool       Pool
-	Apr        AprData
-}
-type Emp struct {
-	Address string
-	New     bool
-}
-type Pool struct {
-	Address string
-}
-type AprData struct {
-	Force int
-	Extra int
-}
-type Token struct {
-	Address  string
-	Decimals int
-}
-type EmpInfo struct {
-	Address           string
-	CollateralAddress string
-	Size              big.Int
-	Price             big.Float
-	Decimals          int
-}
-type responseAprDegenerative struct {
-	UGAS map[string]*big.Float `json:"UGAS"`
-}
-
 var rewards map[string]*big.Float
+var eth_rebaserContract *eth_rebaser.EthRebaser
+var yamv3Contract *yamv3.Yamv3
+var getAprYamCron *cron.Cron
+var getAprDegenerativeCron *cron.Cron
 
 func Apr(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
@@ -78,15 +41,13 @@ func Apr(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		rewards = make(map[string]*big.Float)
 		//Open assetsJson File
 		assetsFile, err := os.Open("assets.json")
-
 		if err != nil {
 			log.Fatalf("failed to get jasonfile: %v", err)
 		}
-
 		fmt.Println("Successfully Opened assets.json")
-
 		//defer the closing of our jsonFile so that we can parse it later on
 		defer assetsFile.Close()
+
 		byteValue, _ := ioutil.ReadAll(assetsFile)
 		var assets Assets
 		json.Unmarshal([]byte(byteValue), &assets)
@@ -128,70 +89,137 @@ func Apr(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		)
 	})
 }
+func storeAprYam(val float64) {
+	mongodb.InsertAprYam(val)
+}
+func storeAprDegenerative(val map[string]float64) {
+	mongodb.InsertAprDegenerative(val)
+}
+func AprYam(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+
+		val := mongodb.GetAprYam()
+		if val == 0 {
+			val = calculateAprYam(geth)
+			storeAprYam(val)
+		}
+		response := &responseAprYam{
+			Value: val}
+		utils.ResJSON(http.StatusCreated, w,
+			response,
+		)
+	})
+}
+func calculateAprYam(geth *ethclient.Client) float64 {
+	var err error
+	var BoU = big.NewFloat(5000)
+	if eth_rebaserContract == nil {
+		eth_rebaserContract, err = eth_rebaser.NewEthRebaser(common.HexToAddress(contractAddress.Eth_rebaser), geth)
+
+	}
+	yamPrice, err := eth_rebaserContract.GetCurrentTWAP(nil)
+	yamPriceFloat := utils.BnToDec(yamPrice, 18)
+	yamScalingFactor := utils.BnToDec(getScalingFactor(geth), 18)
+	yamTvl := CalculateTvlYam(geth)
+
+	temp1 := new(big.Float).Mul(new(big.Float).Mul(BoU, yamPriceFloat), new(big.Float).Mul(big.NewFloat(365.5), yamScalingFactor))
+	temp2 := new(big.Float).Quo(new(big.Float).Mul(temp1, big.NewFloat(100)), new(big.Float).Mul(big.NewFloat(7), big.NewFloat(yamTvl)))
+	if err != nil {
+		log.Fatalf("failed to get yamprice: %v", err)
+	}
+	val, _ := temp2.Float64()
+	return val
+
+}
+func getScalingFactor(geth *ethclient.Client) *big.Int {
+	var err error
+	if yamv3Contract == nil {
+		yamv3Contract, err = yamv3.NewYamv3(common.HexToAddress(contractAddress.Yamv3), geth)
+	}
+	yamScalingFactor, err := yamv3Contract.YamsScalingFactor(&bind.CallOpts{})
+	if err != nil {
+		log.Fatalf("failed to get yamScalingFactor: %v", err)
+	}
+	return yamScalingFactor
+
+}
 func AprDegenerative(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		var payload Asset
-		rewards = make(map[string]*big.Float)
-		//Open assetsJson File
-		assetsFile, err := os.Open("assets.json")
 
-		if err != nil {
-			log.Fatalf("failed to get jasonfile: %v", err)
+		val := mongodb.GetAprDegenerative()
+		if val == nil {
+			val = CalculateAprDegenerative(geth).UGAS
+			storeAprDegenerative(val)
 		}
-
-		fmt.Println("Successfully Opened assets.json")
-
-		//defer the closing of our jsonFile so that we can parse it later on
-		defer assetsFile.Close()
-		byteValue, _ := ioutil.ReadAll(assetsFile)
-		var assets Assets
-		json.Unmarshal([]byte(byteValue), &assets)
-		fmt.Println(assets.Ugas[0].Emp.Address)
-
-		emps := utils.GetDevMiningEmps()
-		var assetEmpList = []string{assets.Ugas[0].Emp.Address, assets.Ugas[1].Emp.Address, assets.Ugas[2].Emp.Address, assets.Ugas[3].Emp.Address, assets.Ustonks[0].Emp.Address}
-		emps.EmpWhiteList = utils.MergeUnique(emps.EmpWhiteList, assetEmpList)
-		fmt.Println(emps.EmpWhiteList)
-		var allEmpInfo []EmpInfo
-		for _, empAddr := range emps.EmpWhiteList {
-			empInfo := GetEmpInfo(empAddr, "usd", geth)
-			allEmpInfo = append(allEmpInfo, empInfo)
-		}
-		var totalValue = big.NewFloat(0)
-
-		var values []big.Float
-
-		for _, empInfo := range allEmpInfo {
-			value := CalculateEmpValue(empInfo.Price, &empInfo.Size, empInfo.Decimals)
-			totalValue = new(big.Float).Add(totalValue, value)
-			values = append(values, *value)
-			fmt.Println(empInfo.Address)
-			fmt.Println(value)
-		}
-		for index, value := range values {
-			x := new(big.Float).Mul(&value, big.NewFloat(emps.TotalReward))
-			y := new(big.Float).Quo(x, totalValue)
-			fmt.Println(y)
-			rewards[allEmpInfo[index].Address] = y
-		}
-
-		payload.AssetName = "UGAS"
-		payload.AssetInstance = assets.Ugas[3]
-		payload.AssetPrice = GetUniPrice(payload.AssetInstance.Token.Address, contractAddress.WETH, geth)
-		ugasJunApr := CalculateApr(payload, geth)
-		payload.AssetName = "UGAS"
-		payload.AssetInstance = assets.Ugas[2]
-		payload.AssetPrice = GetUniPrice(payload.AssetInstance.Token.Address, contractAddress.WETH, geth)
-
-		ugasMarApr := CalculateApr(payload, geth)
 		response := &responseAprDegenerative{
-			UGAS: map[string]*big.Float{"MAR21": ugasMarApr, "JUN21": ugasJunApr},
+			UGAS: val,
 		}
 
 		utils.ResJSON(http.StatusCreated, w,
 			response,
 		)
 	})
+}
+func CalculateAprDegenerative(geth *ethclient.Client) *responseAprDegenerative {
+	var payload Asset
+	rewards = make(map[string]*big.Float)
+	//Open assetsJson File
+	assetsFile, err := os.Open("assets.json")
+
+	if err != nil {
+		log.Fatalf("failed to get jasonfile: %v", err)
+	}
+
+	fmt.Println("Successfully Opened assets.json")
+
+	//defer the closing of our jsonFile so that we can parse it later on
+	defer assetsFile.Close()
+	byteValue, _ := ioutil.ReadAll(assetsFile)
+	var assets Assets
+	json.Unmarshal([]byte(byteValue), &assets)
+	fmt.Println(assets.Ugas[0].Emp.Address)
+
+	emps := utils.GetDevMiningEmps()
+	var assetEmpList = []string{assets.Ugas[0].Emp.Address, assets.Ugas[1].Emp.Address, assets.Ugas[2].Emp.Address, assets.Ugas[3].Emp.Address, assets.Ustonks[0].Emp.Address}
+	emps.EmpWhiteList = utils.MergeUnique(emps.EmpWhiteList, assetEmpList)
+	fmt.Println(emps.EmpWhiteList)
+	var allEmpInfo []EmpInfo
+	for _, empAddr := range emps.EmpWhiteList {
+		empInfo := GetEmpInfo(empAddr, "usd", geth)
+		allEmpInfo = append(allEmpInfo, empInfo)
+	}
+	var totalValue = big.NewFloat(0)
+
+	var values []big.Float
+
+	for _, empInfo := range allEmpInfo {
+		value := CalculateEmpValue(empInfo.Price, &empInfo.Size, empInfo.Decimals)
+		totalValue = new(big.Float).Add(totalValue, value)
+		values = append(values, *value)
+		fmt.Println(empInfo.Address)
+		fmt.Println(value)
+	}
+	for index, value := range values {
+		x := new(big.Float).Mul(&value, big.NewFloat(emps.TotalReward))
+		y := new(big.Float).Quo(x, totalValue)
+		fmt.Println(y)
+		rewards[allEmpInfo[index].Address] = y
+	}
+
+	payload.AssetName = "UGAS"
+	payload.AssetInstance = assets.Ugas[3]
+	payload.AssetPrice = GetUniPrice(payload.AssetInstance.Token.Address, contractAddress.WETH, geth)
+	ugasJunApr, _ := CalculateApr(payload, geth).Float64()
+	payload.AssetName = "UGAS"
+	payload.AssetInstance = assets.Ugas[2]
+	payload.AssetPrice = GetUniPrice(payload.AssetInstance.Token.Address, contractAddress.WETH, geth)
+
+	ugasMarApr, _ := CalculateApr(payload, geth).Float64()
+
+	response := &responseAprDegenerative{
+		UGAS: map[string]float64{"MAR21": ugasMarApr, "JUN21": ugasJunApr},
+	}
+	return response
 }
 func CalculateApr(payload Asset, geth *ethclient.Client) *big.Float {
 	contractEmp, err := emp.NewEmp(common.HexToAddress(payload.AssetInstance.Emp.Address), geth)
@@ -202,11 +230,11 @@ func CalculateApr(payload Asset, geth *ethclient.Client) *big.Float {
 	if err != nil {
 		log.Fatalf("failed to instantiate emp contract: %v", err)
 	}
-	contractEmpCall, err := contractEmp.RawTotalPositionCollateral(&bind.CallOpts{})
+	contractEmpCall, err := contractEmp.RawTotalPositionCollateral(nil)
 	if err != nil {
 		log.Fatalf("failed to get rawtototalpositioncollateral: %v", err)
 	}
-	contractLpCall, err := contractLp.GetReserves(&bind.CallOpts{})
+	contractLpCall, err := contractLp.GetReserves(nil)
 	if err != nil {
 		log.Fatalf("failed to get Reserves: %v", err)
 	}
@@ -233,8 +261,7 @@ func CalculateApr(payload Asset, geth *ethclient.Client) *big.Float {
 	var umaWeekRewards = big.NewFloat(0)
 	if payload.AssetName == "UGAS" && payload.AssetInstance.Cycle == "JUN" && payload.AssetInstance.Year == "21" {
 		ct := new(big.Float).SetInt64(currentTime)
-		fmt.Println(ct)
-		fmt.Println(ct.Cmp(week1Until))
+
 		if ct.Cmp(week1Until) == -1 {
 			yamWeekRewards = (new(big.Float).Add(yamWeekRewards, big.NewFloat(5000)))
 		} else if ct.Cmp(week2Until) == -1 {
@@ -290,27 +317,25 @@ func CalculateApr(payload Asset, geth *ethclient.Client) *big.Float {
 	aprCalculateExtra := new(big.Float).Quo(new(big.Float).Mul(weekRewards, big.NewFloat(52*100)), assetReserveValue)
 	totalAprCalculation := new(big.Float).Add(aprCalculate, aprCalculateExtra)
 	return totalAprCalculation
-
 }
 func CalculateEmpValue(price big.Float, size *big.Int, decimals int) *big.Float {
 	fixedPrice := price
 	fixedSize := utils.BnToDec(size, decimals)
 	ret := new(big.Float).Mul(&fixedPrice, fixedSize)
 	return ret
-
 }
 func GetUniPrice(tokenA string, tokenB string, geth *ethclient.Client) *big.Float {
 	uniFact := GetUNIFact(geth)
-	pair, err := uniFact.GetPair(&bind.CallOpts{}, common.HexToAddress(tokenA), common.HexToAddress(tokenB))
+	pair, err := uniFact.GetPair(nil, common.HexToAddress(tokenA), common.HexToAddress(tokenB))
 	if err != nil {
 		log.Fatalf("failed to get pair: %v", err)
 	}
 	uniPair := GetUni(pair.Hex(), geth)
-	token0, err := uniPair.Token0(&bind.CallOpts{})
+	token0, err := uniPair.Token0(nil)
 	if err != nil {
 		log.Fatalf("failed to get token0: %v", err)
 	}
-	res, err := uniPair.GetReserves(&bind.CallOpts{})
+	res, err := uniPair.GetReserves(nil)
 	if err != nil {
 		log.Fatalf("failed to get reserves: %v", err)
 	}
@@ -352,7 +377,7 @@ func GetEmpInfo(address string, toCurrency string, geth *ethclient.Client) EmpIn
 		log.Fatalf("failed to instantiate contract: %v", err)
 	}
 
-	collateralAddress, err := empContract.CollateralCurrency(&bind.CallOpts{})
+	collateralAddress, err := empContract.CollateralCurrency(nil)
 	if err != nil {
 		log.Fatalf("failed to get collateralAddress: %v", err)
 	}
@@ -360,11 +385,11 @@ func GetEmpInfo(address string, toCurrency string, geth *ethclient.Client) EmpIn
 	if err != nil {
 		log.Fatalf("failed to instantiate contract: %v", err)
 	}
-	size, err := empContract.RawTotalPositionCollateral(&bind.CallOpts{})
+	size, err := empContract.RawTotalPositionCollateral(nil)
 	if err != nil {
 		log.Fatalf("failed to get size: %v", err)
 	}
-	decimals, err := erc20Contract.Decimals(&bind.CallOpts{})
+	decimals, err := erc20Contract.Decimals(nil)
 	if err != nil {
 		log.Fatalf("failed to get size: %v", err)
 	}
