@@ -168,7 +168,7 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 
 				/// @dev Recover Method from tx input data
 				method, _ := contractAbi.MethodById(transaction.Data())
-				if err != nil {
+				if err != nil || method == nil {
 					// log.Error("method", err)
 					continue
 				}
