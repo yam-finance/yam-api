@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"yam-api/source/utils/etherscan/response"
 	"yam-api/source/utils/log"
 )
 
@@ -76,6 +77,7 @@ func CheckSuccess(code int) bool {
 	}
 	return value
 }
+
 func BnToDec(number *big.Int, decimal int) *big.Float {
 	divineNumber := math.Pow10(decimal)
 
@@ -84,6 +86,18 @@ func BnToDec(number *big.Int, decimal int) *big.Float {
 	z := new(big.Float).Quo(x, y)
 
 	return z
+}
+
+func FilterArray(arr []response.Tx, cond func(response.Tx) bool) []response.Tx {
+	result := []response.Tx{}
+
+	for i := range arr {
+		if cond(arr[i]) {
+			result = append(result, arr[i])
+		}
+	}
+
+	return result
 }
 
 func GetWETHPrice() *big.Float {

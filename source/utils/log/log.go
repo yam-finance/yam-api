@@ -17,3 +17,13 @@ func Dev(content ...interface{}) {
 		fmt.Print("error", " ", content, "\n")
 	}
 }
+
+// @dev Gives error some context msg.
+func WrapErr(err error, msg string) (errWithContext error) {
+	if err == nil {
+		return
+	}
+
+	errWithContext = fmt.Errorf("%s: %v", msg, err)
+	return
+}
