@@ -45,11 +45,6 @@ func Connect() {
 	dbPass = os.Getenv("DB_PASS")
 	dbName = os.Getenv("DB_NAME")
 	dbURI = os.Getenv("URI")
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
 
 	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
 
