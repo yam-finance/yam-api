@@ -32,16 +32,24 @@ type PunkIndex struct {
 // --------- MongoDB Connection ---------
 
 func Connect() {
+
 	/// @dev Load .env file
-	envErr := godotenv.Load(".env")
-	if envErr != nil {
-		log.Fatalf("Error loading .env file")
+	if _, err := os.Stat(".env"); err == nil || os.IsExist(err) {
+		envErr := godotenv.Load(".env")
+		if envErr != nil {
+			log.Fatalf("Error loading .env file")
+		}
 	}
 
 	dbUser = os.Getenv("DB_USER")
 	dbPass = os.Getenv("DB_PASS")
 	dbName = os.Getenv("DB_NAME")
 	dbURI = os.Getenv("URI")
+	fmt.Println(dbURI)
+	fmt.Println(dbURI)
+	fmt.Println(dbURI)
+	fmt.Println(dbURI)
+	fmt.Println(dbURI)
 
 	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
 
