@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"math"
+	"math/big"
 	"yam-api/source/utils/log"
+	"yam-api/source/utils/etherscan/response"
 )
 
 func ResError(code int, w http.ResponseWriter, msg string) {
@@ -69,4 +72,26 @@ func CheckSuccess(code int) bool {
 		value = false
 	}
 	return value
+}
+
+func BnToDec(number *big.Int, decimal int) *big.Float {
+	divineNumber := math.Pow10(decimal)
+
+	x, y := new(big.Float).SetInt(number), big.NewFloat(divineNumber)
+
+	z := new(big.Float).Quo(x, y)
+
+	return z
+}
+
+func FilterArray(arr []response.Tx, cond func(response.Tx) bool) []response.Tx {
+	result := []response.Tx{}
+
+	for i := range arr {
+		if cond(arr[i]) {
+			result = append(result, arr[i])
+		}
+	}
+
+	return result
 }

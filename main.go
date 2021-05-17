@@ -7,6 +7,7 @@ import (
 	"yam-api/source/config"
 	"yam-api/source/routes"
 	"yam-api/source/utils/log"
+	"yam-api/source/utils/mongodb"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -14,7 +15,7 @@ import (
 func run() error {
 	fmt.Println("Starting yam server...")
 
-	conf, confError := config.Load("./config/prod.yaml")
+	conf, confError := config.Load("./config/local.yaml")
 	if confError != nil {
 		fmt.Print(confError)
 	}
@@ -23,6 +24,8 @@ func run() error {
 	if gethError != nil {
 		fmt.Print(gethError)
 	}
+
+	mongodb.Connect()
 
 	routes := routes.Initialize(conf, geth)
 	return source.Serve(conf, routes)
