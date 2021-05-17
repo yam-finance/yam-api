@@ -91,6 +91,7 @@ func FilterWithTopic(geth *ethclient.Client, contractAddress common.Address, blo
 	for _, bs := range blockStarts {
 		be := math.Min(float64(bs+nblocks-1), float64(blockEnd))
 
+		/// @dev Filter query with topic param
 		query := ethereum.FilterQuery{
 			FromBlock: big.NewInt(int64(bs)),
 			ToBlock:   big.NewInt(int64(be)),
