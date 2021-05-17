@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"yam-api/source/config"
+	"yam-api/source/contracts/cryptoPunksMarket"
 	"yam-api/source/utils"
 	"yam-api/source/utils/etherscan/helper"
 	"yam-api/source/utils/log"
@@ -25,8 +26,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
 	"github.com/montanaflynn/stats"
-
-	store "yam-api/source/contracts"
 )
 
 // --------- Types ---------
@@ -123,7 +122,7 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 	blockStart := helper.GetBlockNumberByTimestamp(geth, uint64(eval_ts-window), "after")
 	blockEnd := helper.GetBlockNumberByTimestamp(geth, uint64(eval_ts), "after")
 
-	contractAbi, err := abi.JSON(strings.NewReader(string(store.StoreABI)))
+	contractAbi, err := abi.JSON(strings.NewReader(string(cryptoPunksMarket.CryptoPunksMarketABI)))
 	if err != nil {
 		log.Error(err)
 	}
@@ -243,7 +242,6 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 	for _, us := range uniqueSales {
 		if us["price"] != "" {
 			priceFloat64, _ := strconv.ParseFloat(us["price"], 64)
-			log.Info(priceFloat64)
 			prices = append(prices, priceFloat64)
 		}
 	}
