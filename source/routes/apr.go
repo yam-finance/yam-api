@@ -89,10 +89,10 @@ func Apr(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		)
 	})
 }
-func storeAprYam(val float64) {
+func StoreAprYam(val float64) {
 	mongodb.InsertAprYam(val)
 }
-func storeAprDegenerative(val map[string]float64) {
+func StoreAprDegenerative(val map[string]float64) {
 	mongodb.InsertAprDegenerative(val)
 }
 func AprYam(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
@@ -100,8 +100,8 @@ func AprYam(path string, router chi.Router, conf *config.Config, geth *ethclient
 
 		val := mongodb.GetAprYam()
 		if val == 0 {
-			val = calculateAprYam(geth)
-			storeAprYam(val)
+			val = CalculateAprYam(geth)
+			StoreAprYam(val)
 		}
 		response := &responseAprYam{
 			Value: val}
@@ -110,7 +110,7 @@ func AprYam(path string, router chi.Router, conf *config.Config, geth *ethclient
 		)
 	})
 }
-func calculateAprYam(geth *ethclient.Client) float64 {
+func CalculateAprYam(geth *ethclient.Client) float64 {
 	var err error
 	var BoU = big.NewFloat(5000)
 	if eth_rebaserContract == nil {
@@ -149,7 +149,7 @@ func AprDegenerative(path string, router chi.Router, conf *config.Config, geth *
 		val := mongodb.GetAprDegenerative()
 		if val == nil {
 			val = CalculateAprDegenerative(geth).UGAS
-			storeAprDegenerative(val)
+			StoreAprDegenerative(val)
 		}
 		response := &responseAprDegenerative{
 			UGAS: val,
