@@ -37,6 +37,17 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	// YAM
 	Treasury("/treasury", router, conf, geth)
 
+	// Account
+	GasStats("/account-stats", router, conf, geth)
+
+	// uPUNK
+	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)
+	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)
+
+	// APR
+	Apr("/apr", router, conf, geth)
+	AprDegenerative("/apr/degenerative", router, conf, geth)
+
 	return router
 }
 
