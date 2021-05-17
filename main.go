@@ -16,7 +16,7 @@ import (
 func run() error {
 	fmt.Println("Starting yam server...")
 
-	conf, confError := config.Load("./config/local.yaml")
+	conf, confError := config.Load("./config/prod.yaml")
 	if confError != nil {
 		fmt.Print(confError)
 	}
