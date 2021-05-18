@@ -13,6 +13,7 @@ import (
 )
 
 var validate *validator.Validate
+var AssetsFromFile AssetsFile
 
 func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 

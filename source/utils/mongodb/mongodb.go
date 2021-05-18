@@ -50,7 +50,8 @@ func Connect() {
 	fmt.Println(dbURI)
 
 	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
-
+	//uri := "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false"
+	fmt.Println(uri)
 	var err error
 	client, err = mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
@@ -72,11 +73,11 @@ func Connect() {
 	fmt.Println("Connected to MongoDB!")
 }
 
-func InsertAprYam(val float64) {
+func InsertAprYam(val map[string]interface{}) {
 	if client != nil {
 		result := AprYam{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		databaseRef := client.Database("ugasmedian")
+		databaseRef := client.Database(dbName)
 		aprYamCollection := databaseRef.Collection("apryam")
 		update := bson.M{
 			"$set": bson.M{"apryam": val},
@@ -95,11 +96,11 @@ func InsertAprYam(val float64) {
 	}
 }
 
-func InsertAprDegenerative(val map[string]float64) {
+func InsertAprDegenerative(val map[string]interface{}) {
 	if client != nil {
 		result := AprDegenerative{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		databaseRef := client.Database("ugasmedian")
+		databaseRef := client.Database(dbName)
 		aprYamDegenerativeCollection := databaseRef.Collection("aprdegenerative")
 		update := bson.M{
 			"$set": bson.M{"aprdegenerative": val},
@@ -118,38 +119,38 @@ func InsertAprDegenerative(val map[string]float64) {
 	}
 }
 
-func GetAprYam() float64 {
+func GetAprYam() map[string]interface{} {
 	if client != nil {
 		result := AprYam{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		databaseRef := client.Database("ugasmedian")
+		databaseRef := client.Database(dbName)
 		aprYamCollection := databaseRef.Collection("apryam")
 		er := aprYamCollection.FindOne(ctx, bson.M{}).Decode(&result)
 		if er != nil {
 			fmt.Println(er)
-			return 0
+			return nil
 		}
 		fmt.Println(result.Value)
 		return result.Value
 	}
-	return 0
+	return nil
 }
 
-func GetAprDegenerative() map[string]float64 {
+func GetAprDegenerative() map[string]interface{} {
 	if client != nil {
 		result := AprDegenerative{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		databaseRef := client.Database("ugasmedian")
+		databaseRef := client.Database(dbName)
 		aprYamDegenerativeCollection := databaseRef.Collection("aprdegenerative")
 		er := aprYamDegenerativeCollection.FindOne(ctx, bson.M{}).Decode(&result)
 		if er != nil {
 			fmt.Println(er)
-			return map[string]float64{"MAR21": 0, "JUN21": 0}
+			return nil
 		}
 		fmt.Println(result.Value)
 		return result.Value
 	}
-	return map[string]float64{"MAR21": 0, "JUN21": 0}
+	return nil
 }
 
 func InsertPunkIndex(val map[string]interface{}) {

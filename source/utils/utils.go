@@ -12,6 +12,10 @@ import (
 	"yam-api/source/utils/log"
 )
 
+type empList struct {
+	EmpWhiteList []string
+	TotalReward  float64
+}
 
 func ResError(code int, w http.ResponseWriter, msg string) {
 	ResJSON(code, w, map[string]interface{}{"code": code, "message": msg})
@@ -114,9 +118,6 @@ func GetWETHPrice() *big.Float {
 
 	market_data := result["market_data"].(map[string]interface{})
 	current_price := market_data["current_price"].(map[string]interface{})
-	//f, err := strconv.ParseFloat(current_price["usd"], 8)
-	//fmt.Println(current_price["usd"])
-
 	return big.NewFloat(current_price["usd"].(float64))
 }
 func GetPriceByContract(address string) *big.Float {
@@ -134,9 +135,6 @@ func GetPriceByContract(address string) *big.Float {
 
 	market_data := result["market_data"].(map[string]interface{})
 	current_price := market_data["current_price"].(map[string]interface{})
-	//f, err := strconv.ParseFloat(current_price["usd"], 8)
-	//fmt.Println(current_price["usd"])
-
 	return big.NewFloat(current_price["usd"].(float64))
 
 }
@@ -157,11 +155,6 @@ func IndexOf(params ...interface{}) int {
 		}
 	}
 	return -1
-}
-
-type empList struct {
-	EmpWhiteList []string
-	TotalReward  float64
 }
 
 func MergeUnique(a []string, b []string) []string {
@@ -192,6 +185,5 @@ func GetDevMiningEmps() empList {
 		item := strings.ToLower(item)
 		result.EmpWhiteList[i] = item
 	}
-	//fmt.Println(result.TotalReward)
 	return result
 }

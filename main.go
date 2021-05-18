@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"os"
 	"yam-api/source"
 	"yam-api/source/config"
@@ -26,6 +27,7 @@ func run() error {
 		fmt.Print(gethError)
 	}
 
+	// db connect
 	mongodb.Connect()
 
 	/// @dev Set up cron for CalculatePunkIndex
@@ -34,11 +36,11 @@ func run() error {
 		values := routes.CalculatePunkIndex(geth)
 		mongodb.InsertPunkIndex(values)
 	})
-	calculatePunkIndexCron.Start()
+	//	calculatePunkIndexCron.Start()
 
 	/// @dev Set up cron for getAprYamCron
 	getAprYamCron := cron.New()
-	getAprYamCron.AddFunc("@every 2m", func() {
+	getAprYamCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateAprYam(geth)
 		routes.StoreAprYam(val)
 	})
@@ -46,9 +48,9 @@ func run() error {
 
 	/// @dev Set up cron for getAprDegenerativeCron
 	getAprDegenerativeCron := cron.New()
-	getAprDegenerativeCron.AddFunc("@every 2m", func() {
-		response := routes.CalculateAprDegenerative(geth)
-		routes.StoreAprDegenerative(response.UGAS)
+	getAprDegenerativeCron.AddFunc("@every 5m", func() {
+		val := routes.CalculateAprDegenerative(geth)
+		routes.StoreAprDegenerative(val)
 	})
 	getAprDegenerativeCron.Start()
 
