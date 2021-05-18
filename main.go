@@ -36,7 +36,7 @@ func run() error {
 		values := routes.CalculatePunkIndex(geth)
 		mongodb.InsertPunkIndex(values)
 	})
-	//	calculatePunkIndexCron.Start()
+	calculatePunkIndexCron.Start()
 
 	/// @dev Set up cron for getAprYamCron
 	getAprYamCron := cron.New()
