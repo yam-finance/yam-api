@@ -51,6 +51,9 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	AprYam("/apr/yam", router, conf, geth)
 	AprDegenerative("/apr/degenerative", router, conf, geth)
 
+	// Asset
+	GetAssets("/degenerative/assets", router, conf, geth)
+
 	return router
 }
 

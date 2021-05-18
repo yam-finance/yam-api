@@ -30,7 +30,6 @@ type PunkIndex struct {
 }
 
 func Connect() {
-
 	/// @dev Load .env file
 	if _, err := os.Stat(".env"); err == nil || os.IsExist(err) {
 		envErr := godotenv.Load(".env")
@@ -43,11 +42,6 @@ func Connect() {
 	dbPass = os.Getenv("DB_PASS")
 	dbName = os.Getenv("DB_NAME")
 	dbURI = os.Getenv("URI")
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
-	fmt.Println(dbURI)
 
 	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
 	//uri := "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false"
@@ -68,7 +62,7 @@ func Connect() {
 	}
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("DB Connection Error", err)
 	}
 	fmt.Println("Connected to MongoDB!")
 }
@@ -165,7 +159,7 @@ func InsertPunkIndex(val map[string]interface{}) {
 			{Key: "timestamp", Value: val["timestamp"]},
 		})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("InsertPunkIndex", err)
 		}
 	}
 }
@@ -187,24 +181,27 @@ func GetLatestPunkIndex() map[string]interface{} {
 		// @dev Find last document in collection
 		filterCursor, err := punkCollection.Find(ctx, bson.M{})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("Latest Index filterCursor", err)
 			return nil
 		}
 		var resultsFiltered []bson.M
 		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
-			log.Fatal(err)
+			log.Fatal("Latest Index resultsFiltered", err)
 			return nil
 		} else if len(resultsFiltered) == 0 {
 			return nil
 		}
 
-		fmt.Println("Price", resultsFiltered[len(resultsFiltered)-1]["price"])
-		fmt.Println("Timestamp", resultsFiltered[len(resultsFiltered)-1]["timestamp"])
+		price := resultsFiltered[len(resultsFiltered)-1]["price"].(string)
+		timestamp := resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string)
+		// unixTimestamp, _ := strconv.Atoi(resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string))
+		// timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
 
-		price := resultsFiltered[len(resultsFiltered)-1]["price"]
-		timestamp := resultsFiltered[len(resultsFiltered)-1]["timestamp"]
-
-		values := map[string]interface{}{"price": price, "timestamp": timestamp}
+		values := map[string]interface{}{
+			"price":     price,
+			"timestamp": timestamp,
+			// "timestampDate": timeT,
+		}
 
 		return values
 	} else {
@@ -221,12 +218,12 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 		// @dev Find last document in collection
 		filterCursor, err := punkCollection.Find(ctx, bson.M{})
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("Index history filterCursor", err)
 			return nil
 		}
 		var resultsFiltered []bson.M
 		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
-			log.Fatal(err)
+			log.Fatal("Index history resultsFiltered", err)
 			return nil
 		}
 
@@ -234,18 +231,20 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 		dayCount := 0
 
 		for _, result := range resultsFiltered {
+			price := result["price"].(string)
+			timestamp := result["timestamp"].(string)
 			unixTimestamp, _ := strconv.Atoi(result["timestamp"].(string))
-			timeT := time.Unix(int64(unixTimestamp), 0).UTC()
-			// fmt.Printf("time.Time: %s\n", timeT)
+			timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
 
-			if strings.Contains(timeT.String(), "01:00") && dayCount < 30 {
+			if strings.Contains(timeT, "01:00") && dayCount < 30 {
 				obj := map[string]interface{}{
-					"price":     result["price"].(string),
-					"timestamp": result["timestamp"].(string),
+					"price":     price,
+					"timestamp": timestamp,
+					// "timestampDate": timeT,
 				}
 
 				dayCount = dayCount + 1
-				values = append(values, obj)
+				values = append([]map[string]interface{}{obj}, values...)
 			}
 		}
 

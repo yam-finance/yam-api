@@ -15,20 +15,20 @@ func GetBlockNumberByTimestamp(geth *ethclient.Client, ts uint64, direction stri
 
 	header, err := geth.HeaderByNumber(context.Background(), nil)
 	if err != nil {
-		log.Error(err)
+		log.Error("Header", err)
 	}
 
 	blockNumber := header.Number
 	currentBlock, err := geth.BlockByNumber(context.Background(), blockNumber)
 	if err != nil {
-		log.Error(err)
+		log.Error("currentBlock", err)
 	}
 
 	currentBlockNumBig := currentBlock.Number()
 	currentBlockNum := currentBlock.Number().Uint64()
 	cm100Block, err := geth.BlockByNumber(context.Background(), big.NewInt(0).Sub(currentBlockNumBig, nBlocks))
 	if err != nil {
-		log.Error(err)
+		log.Error("cm100Block", err)
 	}
 
 	/// @dev Compute the average block time using the last 10_000 blocks
@@ -47,7 +47,7 @@ func GetBlockNumberByTimestamp(geth *ethclient.Client, ts uint64, direction stri
 
 	blockOlder, err := geth.BlockByNumber(context.Background(), big.NewInt(int64(blockNumOlder)))
 	if err != nil {
-		log.Error(err)
+		log.Error("blockOlder", err)
 	}
 
 	blockNumNewer := math.Min(
@@ -56,7 +56,7 @@ func GetBlockNumberByTimestamp(geth *ethclient.Client, ts uint64, direction stri
 
 	blockNewer, err := geth.BlockByNumber(context.Background(), big.NewInt(int64(blockNumNewer)))
 	if err != nil {
-		log.Error(err)
+		log.Error("blockNewer", err)
 	}
 
 	if blockOlder.Time() > ts && ts > blockNewer.Time() {
@@ -72,12 +72,12 @@ func GetBlockNumberByTimestamp(geth *ethclient.Client, ts uint64, direction stri
 
 		proposed, err := geth.BlockByNumber(context.Background(), big.NewInt(int64(blockNumProposed)))
 		if err != nil {
-			log.Error(err)
+			log.Error("proposed", err)
 		}
 
 		proposedM1, err := geth.BlockByNumber(context.Background(), big.NewInt(int64(blockNumProposedM1)))
 		if err != nil {
-			log.Error(err)
+			log.Error("proposedM1", err)
 		}
 
 		if proposedM1.Time() < ts && ts <= proposed.Time() {
