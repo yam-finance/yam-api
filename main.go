@@ -27,10 +27,8 @@ func run() error {
 		fmt.Print(gethError)
 	}
 
-	// db connect
 	mongodb.Connect()
 
-	/// @dev Set up cron for CalculatePunkIndex
 	calculatePunkIndexCron := cron.New()
 	calculatePunkIndexCron.AddFunc("@every 5m", func() {
 		values := routes.CalculatePunkIndex(geth)
@@ -38,7 +36,6 @@ func run() error {
 	})
 	calculatePunkIndexCron.Start()
 
-	/// @dev Set up cron for getAprYamCron
 	getAprYamCron := cron.New()
 	getAprYamCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateAprYam(geth)
@@ -46,7 +43,6 @@ func run() error {
 	})
 	getAprYamCron.Start()
 
-	/// @dev Set up cron for getAprDegenerativeCron
 	getAprDegenerativeCron := cron.New()
 	getAprDegenerativeCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateAprDegenerative(geth)
