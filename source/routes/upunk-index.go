@@ -69,7 +69,7 @@ func Filter(geth *ethclient.Client, contractAddress common.Address, blockStart u
 
 		_logs, err := geth.FilterLogs(context.Background(), query)
 		if err != nil {
-			log.Error(err)
+			log.Error("Filter", err)
 		}
 
 		logs = append(logs, _logs)
@@ -105,7 +105,7 @@ func FilterWithTopic(geth *ethclient.Client, contractAddress common.Address, blo
 
 		_logs, err := geth.FilterLogs(context.Background(), query)
 		if err != nil {
-			log.Error(err)
+			log.Error("Filter", err)
 		}
 
 		logs = append(logs, _logs)
@@ -129,7 +129,7 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(cryptoPunksMarket.CryptoPunksMarketABI)))
 	if err != nil {
-		log.Error(err)
+		log.Error("Abi", err)
 	}
 
 	/// @dev Event Signatures
@@ -163,15 +163,15 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 				/// @dev Identify transaction
 				transaction, _, err := geth.TransactionByHash(context.Background(), vLog.TxHash)
 				if err != nil {
-					log.Error(err)
+					log.Error("tx", err)
 				}
 
 				/// @dev Recover Method from tx input data
 				method, _ := contractAbi.MethodById(transaction.Data())
-				// if err != nil {
-				// 	log.Error(err)
-				// 	continue
-				// }
+				if err != nil || method == nil {
+					// log.Error("method", err)
+					continue
+				}
 
 				buyMethod := contractAbi.Methods["buyPunk"]
 				bidMethod := contractAbi.Methods["acceptBidForPunk"]
@@ -180,15 +180,15 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 				if reflect.DeepEqual(*method, buyMethod) {
 					punkBoughtEventData, err := contractAbi.Unpack("PunkBought", vLog.Data)
 					if err != nil {
-						log.Error(err)
+						log.Error("PunkBought", err)
+					} else {
+						var price interface{} = punkBoughtEventData[0]
+						priceStr := fmt.Sprintf("%v", price)
+						info["price"] = priceStr
+
+						punkSales = append(punkSales, info)
+						// punkSales[_punkIndex] = info
 					}
-
-					var price interface{} = punkBoughtEventData[0]
-					priceStr := fmt.Sprintf("%v", price)
-					info["price"] = priceStr
-
-					punkSales = append(punkSales, info)
-					// punkSales[_punkIndex] = info
 				} else if reflect.DeepEqual(*method, bidMethod) {
 					for i, _ := range bidLogs {
 						if len(bidLogs[i]) == 0 {
@@ -208,13 +208,13 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 						if punkBidEnteredEvent.punkIndex == _punkIndex {
 							punkBidEnteredEventData, err := contractAbi.Unpack("PunkBidEntered", vLog.Data)
 							if err != nil {
-								log.Error(err)
+								log.Error("PunkBidEntered", err)
+							} else {
+								var price interface{} = punkBidEnteredEventData[0]
+								priceStr := fmt.Sprintf("%v", price)
+
+								info["price"] = priceStr
 							}
-
-							var price interface{} = punkBidEnteredEventData[0]
-							priceStr := fmt.Sprintf("%v", price)
-
-							info["price"] = priceStr
 						}
 					}
 
@@ -291,10 +291,7 @@ func GetLatestPunkIndex(path string, router chi.Router, conf *config.Config, get
 		}
 
 		utils.ResJSON(http.StatusCreated, w,
-			map[string]interface{}{
-				"price":     values["price"],
-				"timestamp": values["timestamp"],
-			},
+			values,
 		)
 
 		if values == nil {
