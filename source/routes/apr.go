@@ -152,7 +152,6 @@ func CalculateAprDegenerative(geth *ethclient.Client) map[string]interface{} {
 		assetEmpList = append(assetEmpList, upunks.Emp.Address)
 	}
 
-	fmt.Println(assetEmpList)
 	emps.EmpWhiteList = utils.MergeUnique(emps.EmpWhiteList, assetEmpList)
 
 	var allEmpInfo []EmpInfo
@@ -174,7 +173,6 @@ func CalculateAprDegenerative(geth *ethclient.Client) map[string]interface{} {
 		y := new(big.Float).Quo(x, totalValue)
 		rewards[allEmpInfo[index].Address] = y
 	}
-	fmt.Println(rewards)
 	var UGAS map[string]float64
 	var USTONKS map[string]float64
 	var UPUNKS map[string]float64
@@ -218,6 +216,7 @@ func CalculateAprDegenerative(geth *ethclient.Client) map[string]interface{} {
 	result["UGAS"] = UGAS
 	result["USTONKS"] = USTONKS
 	result["UPUNKS"] = UPUNKS
+	fmt.Println(result)
 
 	return result
 }
