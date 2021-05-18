@@ -13,48 +13,30 @@ import (
 )
 
 type Response struct {
-	Ugas []struct {
-		Name       string `json:"name"`
-		Cycle      string `json:"cycle"`
-		Year       string `json:"year"`
-		Collateral string `json:"collateral"`
-		Token      struct {
-			Address  string `json:"address"`
-			Decimals int    `json:"decimals"`
-		} `json:"token"`
-		Emp struct {
-			Address string `json:"address"`
-			New     bool   `json:"new"`
-		} `json:"emp"`
-		Pool struct {
-			Address string `json:"address"`
-		} `json:"pool"`
-		Apr struct {
-			Force int `json:"force"`
-			Extra int `json:"extra"`
-		} `json:"apr"`
-	} `json:"ugas"`
-	Ustonks []struct {
-		Name       string `json:"name"`
-		Cycle      string `json:"cycle"`
-		Year       string `json:"year"`
-		Collateral string `json:"collateral"`
-		Token      struct {
-			Address  string `json:"address"`
-			Decimals int    `json:"decimals"`
-		} `json:"token"`
-		Emp struct {
-			Address string `json:"address"`
-			New     bool   `json:"new"`
-		} `json:"emp"`
-		Pool struct {
-			Address string `json:"address"`
-		} `json:"pool"`
-		Apr struct {
-			Force int `json:"force"`
-			Extra int `json:"extra"`
-		} `json:"apr"`
-	} `json:"ustonks"`
+	Ugas    Content `json:"ugas"`
+	Ustonks Content `json:"ustonks"`
+}
+
+type Content []struct {
+	Name       string `json:"name"`
+	Cycle      string `json:"cycle"`
+	Year       string `json:"year"`
+	Collateral string `json:"collateral"`
+	Token      struct {
+		Address  string `json:"address"`
+		Decimals int    `json:"decimals"`
+	} `json:"token"`
+	Emp struct {
+		Address string `json:"address"`
+		New     bool   `json:"new"`
+	} `json:"emp"`
+	Pool struct {
+		Address string `json:"address"`
+	} `json:"pool"`
+	Apr struct {
+		Force int `json:"force"`
+		Extra int `json:"extra"`
+	} `json:"apr"`
 }
 
 func GetAssets(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
