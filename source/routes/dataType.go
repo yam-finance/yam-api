@@ -3,8 +3,12 @@ package routes
 import "math/big"
 
 type Assets struct {
-	Ugas    []AssetInstance
-	Ustonks []AssetInstance
+	Ugas    []AssetInstance `json:"ugas"`
+	Ustonks []AssetInstance `json:"ustonks"`
+	Upunks  []AssetInstance `json:"upunks"`
+}
+type AssetsFile struct {
+	Assets Assets `json:"mainnet"`
 }
 type Asset struct {
 	AssetName     string
@@ -19,7 +23,7 @@ type AssetInstance struct {
 	Token      Token
 	Emp        Emp
 	Pool       Pool
-	Apr        AprData
+	Expired    bool
 }
 type Emp struct {
 	Address string
@@ -27,10 +31,6 @@ type Emp struct {
 }
 type Pool struct {
 	Address string
-}
-type AprData struct {
-	Force int
-	Extra int
 }
 type Token struct {
 	Address  string
@@ -42,10 +42,4 @@ type EmpInfo struct {
 	Size              big.Int
 	Price             big.Float
 	Decimals          int
-}
-type responseAprDegenerative struct {
-	UGAS map[string]float64 `json:"UGAS"`
-}
-type responseAprYam struct {
-	Value float64 `json:"farm"`
 }

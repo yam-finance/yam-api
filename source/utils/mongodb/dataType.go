@@ -5,10 +5,10 @@ import (
 )
 
 type AprYam struct {
-	ID    primitive.ObjectID `bson:"_id"`
-	Value float64            `bson:"apryam"`
+	ID    primitive.ObjectID     `bson:"_id"`
+	Value map[string]interface{} `bson:"apryam"`
 }
 type AprDegenerative struct {
-	ID    primitive.ObjectID `bson:"_id"`
-	Value map[string]float64 `bson:"aprdegenerative"`
+	ID    primitive.ObjectID     `bson:"_id"`
+	Value map[string]interface{} `bson:"aprdegenerative"`
 }
