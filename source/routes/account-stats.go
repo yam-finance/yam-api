@@ -100,7 +100,7 @@ func New(network Network, APIKey string) *Client {
 	return NewCustomized(Customization{
 		Timeout: 30 * time.Second,
 		Key:     APIKey,
-		BaseURL: fmt.Sprintf(`https:///%s.etherscan.io/api?`, network.SubDomain()),
+		BaseURL: `https://api.etherscan.io/api?`,
 	})
 }
 
@@ -392,12 +392,12 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		endTimeStamp, _ := strconv.Atoi(endTime)
 
 		/// @dev Build startBlock
-		block, blockNumberErr := api.GetBlockNumberByTimestamp(startTimeStamp, "after")
-		startBlock, _ := strconv.Atoi(block)
+		blockStart, blockStartNumberErr := api.GetBlockNumberByTimestamp(startTimeStamp, "after")
+		startBlock, _ := strconv.Atoi(blockStart)
 
 		/// @dev Build endBlock
-		block, blockNumberErr = api.GetBlockNumberByTimestamp(endTimeStamp, "before")
-		endBlock, _ := strconv.Atoi(block)
+		blockEnd, blockEndNumberErr := api.GetBlockNumberByTimestamp(endTimeStamp, "before")
+		endBlock, _ := strconv.Atoi(blockEnd)
 
 		normalTxs, normalTxsErr := GetNormalTxByAddress(accountAddress, startBlock, endBlock)
 		erc20Txs, erc20TxsErr := GetERC20Transfers(accountAddress, startBlock, endBlock)
@@ -418,7 +418,7 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		var gasPriceArray []*helper.BigInt
 		var gasFeeArray []*big.Int
 		totalGasFee := new(big.Int).SetInt64(0)
-		var totalGasFeeETH *big.Float
+		var totalGasFeeETH *big.Float = new(big.Float).SetFloat64(0)
 
 		// Failed Calculation
 		failedTxCount := len(failedTxsFromAddress)
@@ -426,7 +426,7 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 		var failedGasPriceArray []*helper.BigInt
 		var failedGasFeeArray []*big.Int
 		totalFailedGasFee := new(big.Int).SetInt64(0)
-		var totalFailedGasFeeETH *big.Float
+		var totalFailedGasFeeETH *big.Float = new(big.Float).SetFloat64(0)
 
 		// Average Calculation
 		totalGasPrice := new(big.Int).SetInt64(0)
@@ -485,19 +485,21 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 
 		/// @dev Log error messages.
 		if normalTxsErr != nil {
-			log.Error(normalTxsErr)
+			log.Error("normalTxsErr", normalTxsErr)
 		} else if erc20TxsErr != nil {
-			log.Error(erc20TxsErr)
-		} else if blockNumberErr != nil {
-			log.Error(blockNumberErr)
+			log.Error("erc20TxsErr", erc20TxsErr)
+		} else if blockStartNumberErr != nil {
+			log.Error("blockStartNumberErr", blockStartNumberErr)
+		} else if blockEndNumberErr != nil {
+			log.Error("blockEndNumberErr", blockEndNumberErr)
 		}
 
 		utils.ResJSON(http.StatusCreated, w,
 			map[string]interface{}{
-				"txCount":              txCount,
-				"failedTxCount":        failedTxCount,
-				"totalGasFeeETH":       string(totalGasFeeETH.String()),
-				"totalFailedGasFeeETH": string(totalFailedGasFeeETH.String()),
+				"txCount":              strconv.FormatInt(int64(txCount), 10),
+				"failedTxCount":        strconv.FormatInt(int64(failedTxCount), 10),
+				"totalGasFeeETH":       totalGasFeeETH.String(),
+				"totalFailedGasFeeETH": totalFailedGasFeeETH.String(),
 				"averageTxPriceGWEI":   averageTxPriceGWEI.String(),
 			},
 		)
