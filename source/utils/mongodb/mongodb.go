@@ -191,13 +191,16 @@ func GetLatestPunkIndex() map[string]interface{} {
 			return nil
 		}
 
-		fmt.Println("Price", resultsFiltered[len(resultsFiltered)-1]["price"])
-		fmt.Println("Timestamp", resultsFiltered[len(resultsFiltered)-1]["timestamp"])
+		price := resultsFiltered[len(resultsFiltered)-1]["price"].(string)
+		timestamp := resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string)
+		unixTimestamp, _ := strconv.Atoi(resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string))
+		timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
 
-		price := resultsFiltered[len(resultsFiltered)-1]["price"]
-		timestamp := resultsFiltered[len(resultsFiltered)-1]["timestamp"]
-
-		values := map[string]interface{}{"price": price, "timestamp": timestamp}
+		values := map[string]interface{}{
+			"price":         price,
+			"timestamp":     timestamp,
+			"timestampDate": timeT,
+		}
 
 		return values
 	} else {
@@ -227,18 +230,20 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 		dayCount := 0
 
 		for _, result := range resultsFiltered {
+			price := result["price"].(string)
+			timestamp := result["timestamp"].(string)
 			unixTimestamp, _ := strconv.Atoi(result["timestamp"].(string))
-			timeT := time.Unix(int64(unixTimestamp), 0).UTC()
-			// fmt.Printf("time.Time: %s\n", timeT)
+			timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
 
-			if strings.Contains(timeT.String(), "01:00") && dayCount < 30 {
+			if strings.Contains(timeT, "01:00") && dayCount < 30 {
 				obj := map[string]interface{}{
-					"price":     result["price"].(string),
-					"timestamp": result["timestamp"].(string),
+					"price":         price,
+					"timestamp":     timestamp,
+					"timestampDate": timeT,
 				}
 
 				dayCount = dayCount + 1
-				values = append(values, obj)
+				values = append([]map[string]interface{}{obj}, values...)
 			}
 		}
 

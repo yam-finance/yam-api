@@ -291,10 +291,7 @@ func GetLatestPunkIndex(path string, router chi.Router, conf *config.Config, get
 		}
 
 		utils.ResJSON(http.StatusCreated, w,
-			map[string]interface{}{
-				"price":     values["price"],
-				"timestamp": values["timestamp"],
-			},
+			values,
 		)
 
 		if values == nil {
