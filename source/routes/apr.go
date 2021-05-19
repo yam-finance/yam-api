@@ -41,13 +41,11 @@ func Apr(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		response = make(map[string]interface{})
 		aprYam := mongodb.GetAprYam()
 		if aprYam == nil {
-			aprYam = CalculateAprYam(geth)
-			StoreAprYam(aprYam)
+			aprYam = map[string]interface{}{}
 		}
 		aprDegenerative := mongodb.GetAprDegenerative()
 		if aprDegenerative == nil {
-			aprDegenerative = CalculateAprDegenerative(geth)
-			StoreAprDegenerative(aprDegenerative)
+			aprDegenerative = map[string]interface{}{}
 		}
 
 		response["yam"] = aprYam
@@ -67,7 +65,6 @@ func AprYam(path string, router chi.Router, conf *config.Config, geth *ethclient
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 
 		response := mongodb.GetAprYam()
-
 		if response == nil {
 			response = map[string]interface{}{}
 		}
@@ -117,7 +114,6 @@ func AprDegenerative(path string, router chi.Router, conf *config.Config, geth *
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 
 		response := mongodb.GetAprDegenerative()
-
 		if response == nil {
 			response = map[string]interface{}{}
 		}
