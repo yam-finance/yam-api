@@ -288,11 +288,20 @@ func CalculateApr(payload Asset, geth *ethclient.Client) *big.Float {
 	assetReserve1 := new(big.Float).Quo(new(big.Float).SetInt(contractLpCall.Reserve1), big.NewFloat(baseCollateral))
 
 	if payload.AssetName == "USTONKS" {
-		calcAsset = new(big.Float).Mul(assetReserve1, tokenPrice)
-		if payload.AssetInstance.Collateral == "WETH" {
-			calcCollateral = new(big.Float).Mul(assetReserve0, ethPrice)
+		if payload.AssetInstance.Cycle == "APR" {
+			calcAsset = new(big.Float).Mul(assetReserve1, tokenPrice)
+			if payload.AssetInstance.Collateral == "WETH" {
+				calcCollateral = new(big.Float).Mul(assetReserve0, ethPrice)
+			} else {
+				calcCollateral = assetReserve0
+			}
 		} else {
-			calcCollateral = assetReserve0
+			calcAsset = new(big.Float).Mul(assetReserve0, tokenPrice)
+			if payload.AssetInstance.Collateral == "WETH" {
+				calcCollateral = new(big.Float).Mul(assetReserve1, ethPrice)
+			} else {
+				calcCollateral = assetReserve1
+			}
 		}
 
 	} else {
