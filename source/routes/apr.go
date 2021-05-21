@@ -254,7 +254,7 @@ func CalculateApr(payload Asset, geth *ethclient.Client) *big.Float {
 		baseCollateral = math.Pow10(18)
 		tokenPrice = (new(big.Float).Mul(payload.AssetPrice, ethPrice))
 	}
-	currentTime := time.Now().Unix()
+	currentTime := time.Now().UTC().Unix()
 	var week1Until = big.NewFloat(1615665600)
 	var week2Until = big.NewFloat(1616961600)
 	var yamWeekRewards = big.NewFloat(0)
