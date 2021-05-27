@@ -72,7 +72,6 @@ func InsertAprYam(val map[string]interface{}) {
 		result := AprYam{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
-		fmt.Println("dbName", dbName)
 		aprYamCollection := databaseRef.Collection("apryam")
 		update := bson.M{
 			"$set": bson.M{"apryam": val},
