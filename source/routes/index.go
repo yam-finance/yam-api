@@ -45,6 +45,7 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)
 	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)
 	AprDegenerative("/degenerative/apr", router, conf, geth)
+	GetAssetIndex("/degenerative/ustonks/index-history-daily", router, conf, geth)
 
 	// Other
 	GasStats("/account-stats", router, conf, geth)
