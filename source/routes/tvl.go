@@ -11,7 +11,6 @@ import (
 	"os"
 	"yam-api/source/config"
 	erc20 "yam-api/source/contracts/erc20"
-	eth_rebaser "yam-api/source/contracts/eth_rebaser"
 	masterchef "yam-api/source/contracts/masterchef"
 	slp "yam-api/source/contracts/slp"
 	weth "yam-api/source/contracts/weth"
@@ -189,10 +188,6 @@ func CalculateTvlDegenerativeAll(geth *ethclient.Client) (map[string]interface{}
 	return result, total
 }
 func CalculateTvlYam(geth *ethclient.Client) float64 {
-	eth_rebaserContract, err := eth_rebaser.NewEthRebaser(common.HexToAddress(contractAddress.Eth_rebaser), geth)
-	if err != nil {
-		log.Fatalf("failed to instantiate contract: %v", err)
-	}
 	masterChefContract, err := masterchef.NewMasterchef(common.HexToAddress(contractAddress.Masterchef), geth)
 	if err != nil {
 		log.Fatalf("failed to instantiate contract: %v", err)
@@ -201,11 +196,8 @@ func CalculateTvlYam(geth *ethclient.Client) float64 {
 	if err != nil {
 		log.Fatalf("failed to instantiate contract: %v", err)
 	}
-
-	yamPrice, err := eth_rebaserContract.GetCurrentTWAP(&bind.CallOpts{})
-	if err != nil {
-		log.Fatalf("failed to get yamprice: %v", err)
-	}
+	yamPrice := utils.GetPriceByContract(contractAddress.Yamv3)
+	fmt.Println("yamPrice = ", yamPrice)
 	userInfo, err := masterChefContract.UserInfo(&bind.CallOpts{}, big.NewInt(44), common.HexToAddress(contractAddress.ContractIncentivizer))
 	if err != nil {
 		log.Fatalf("failed to get amount: %v", err)
@@ -223,12 +215,12 @@ func CalculateTvlYam(geth *ethclient.Client) float64 {
 	yamValue := utils.BnToDec(totalSLPReserves.Reserve0, 18)
 	ethValue := utils.BnToDec(totalSLPReserves.Reserve1, 18)
 
-	yamPriceFloat := utils.BnToDec(yamPrice, 18)
+	//yamPriceFloat := utils.BnToDec(yamPrice, 18)
 	totalIncentivizerValue := userInfo.Amount
 	wethPrice := utils.GetWETHPrice()
 
 	temp1 := new(big.Float).Quo(new(big.Float).SetInt(totalIncentivizerValue), new(big.Float).SetInt(totalSLPSupply))
-	temp2 := new(big.Float).Add(new(big.Float).Mul(ethValue, wethPrice), new(big.Float).Mul(yamValue, yamPriceFloat))
+	temp2 := new(big.Float).Add(new(big.Float).Mul(ethValue, wethPrice), new(big.Float).Mul(yamValue, yamPrice))
 	temp3 := new(big.Float).Mul(temp1, temp2)
 	val, _ := temp3.Float64()
 	tvl := math.Round(val)
