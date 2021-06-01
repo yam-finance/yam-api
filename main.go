@@ -29,6 +29,16 @@ func run() error {
 
 	mongodb.Connect()
 
+	/// @notice Asset Index scheduler
+	storeAssetIndexCron := cron.New()
+	storeAssetIndexCron.AddFunc("@every 5m", func() {
+		values := routes.FetchAssetIndex()
+		mongodb.InsertAssetIndex(values)
+	})
+	storeAssetIndexCron.Start()
+
+	// TODO: Merge with Asset Index scheduler
+	/// @notice Punk Index scheduler
 	calculatePunkIndexCron := cron.New()
 	calculatePunkIndexCron.AddFunc("@every 5m", func() {
 		values := routes.CalculatePunkIndex(geth)
@@ -36,6 +46,7 @@ func run() error {
 	})
 	calculatePunkIndexCron.Start()
 
+	/// @notice YAM APR scheduler
 	getAprYamCron := cron.New()
 	getAprYamCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateAprYam(geth)
@@ -43,6 +54,7 @@ func run() error {
 	})
 	getAprYamCron.Start()
 
+	/// @notice Degenerative APR scheduler
 	getAprDegenerativeCron := cron.New()
 	getAprDegenerativeCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateAprDegenerative(geth)

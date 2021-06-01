@@ -8,7 +8,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 	"yam-api/source/config"
+	"yam-api/source/utils"
+	"yam-api/source/utils/mongodb"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
@@ -73,9 +77,11 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-func GetAssetIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+func FetchAssetIndex() map[string]interface{} {
+	eval_ts := int(time.Now().UTC().Unix())
+
 	ctx := context.Background()
-	b, err := ioutil.ReadFile("credentials.json")
+	b, err := ioutil.ReadFile(".credentials.json")
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
@@ -110,4 +116,59 @@ func GetAssetIndex(path string, router chi.Router, conf *config.Config, geth *et
 			fmt.Printf("%s, %s\n", row[0], row[4])
 		}
 	}
+
+	// TODO: Update passed values
+	values := map[string]interface{}{"cycle": "USTONKS-0121", "price": "0", "timestamp": strconv.Itoa(eval_ts)}
+
+	return values
+}
+
+// --------- uSTONKS Endpoints ---------
+
+func GetLatestUStonksIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		/// @dev Retrieve values from db
+		values := mongodb.GetLatestAssetIndex()
+		if values == nil {
+			values = map[string]interface{}{
+				"cycle":     "0",
+				"price":     "0",
+				"timestamp": "0",
+			}
+		}
+
+		utils.ResJSON(http.StatusCreated, w,
+			values,
+		)
+
+		if values == nil {
+			values = FetchAssetIndex()
+			mongodb.InsertPunkIndex(values)
+		}
+	})
+}
+
+func GetLatestUStonksIndexHistory(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		/// @dev Retrieve values from db
+		history := mongodb.GetAssetIndexHistoryDaily()
+		if history == nil {
+			history = []map[string]interface{}{
+				{
+					"cycle":     "0",
+					"price":     "0",
+					"timestamp": "0",
+				},
+			}
+		}
+
+		utils.ResJSON(http.StatusCreated, w,
+			history,
+		)
+
+		if history == nil {
+			values := FetchAssetIndex()
+			mongodb.InsertPunkIndex(values)
+		}
+	})
 }
