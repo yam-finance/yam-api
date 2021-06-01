@@ -384,8 +384,20 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 
 		query := r.URL.Query()
 		address := query.Get("address")
-		startTime := query.Get("startTimeStamp")
-		endTime := query.Get("endTimeStamp")
+		var startTime string
+		var endTime string
+
+		if query.Get("startTimeStamp") == "" {
+			startTime = "0"
+		} else {
+			startTime = query.Get("startTimeStamp")
+		}
+
+		if query.Get("endTimeStamp") == "" {
+			endTime = strconv.Itoa(int(time.Now().UTC().Unix()))
+		} else {
+			endTime = query.Get("endTimeStamp")
+		}
 
 		accountAddress := address
 		startTimeStamp, _ := strconv.Atoi(startTime)

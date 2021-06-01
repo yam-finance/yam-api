@@ -44,9 +44,9 @@ type PunkBidEntered struct {
 	fromAddress common.Address
 }
 
-// --------- Helper Functions ---------
+// --------- Specific Helper Functions ---------
 
-func Filter(geth *ethclient.Client, contractAddress common.Address, blockStart uint64, blockEnd uint64) [][]types.Log {
+func Filter(geth *ethclient.Client, contractAddress common.Address, blockStart uint64, blockEnd uint64, topic common.Hash, withParam bool) [][]types.Log {
 	var logs [][]types.Log
 	/// @notice Infura can only handle 10_000 events at a time
 	nblocks := uint64(math.Floor(10_000 / 0.25))
@@ -58,49 +58,28 @@ func Filter(geth *ethclient.Client, contractAddress common.Address, blockStart u
 
 	for _, bs := range blockStarts {
 		be := math.Min(float64(bs+nblocks-1), float64(blockEnd))
+		var query ethereum.FilterQuery
 
-		query := ethereum.FilterQuery{
-			FromBlock: big.NewInt(int64(bs)),
-			ToBlock:   big.NewInt(int64(be)),
-			Addresses: []common.Address{
-				contractAddress,
-			},
-		}
-
-		_logs, err := geth.FilterLogs(context.Background(), query)
-		if err != nil {
-			log.Error("Filter", err)
-		}
-
-		logs = append(logs, _logs)
-	}
-
-	return logs
-}
-
-func FilterWithTopic(geth *ethclient.Client, contractAddress common.Address, blockStart uint64, blockEnd uint64, topic common.Hash) [][]types.Log {
-	var logs [][]types.Log
-	/// @notice Infura can only handle 10_000 events at a time
-	nblocks := uint64(math.Floor(10_000 / 0.25))
-	var blockStarts []uint64
-
-	for i := blockStart; i < blockEnd; i = i + nblocks {
-		blockStarts = append(blockStarts, i)
-	}
-
-	for _, bs := range blockStarts {
-		be := math.Min(float64(bs+nblocks-1), float64(blockEnd))
-
-		/// @dev Filter query with topic param
-		query := ethereum.FilterQuery{
-			FromBlock: big.NewInt(int64(bs)),
-			ToBlock:   big.NewInt(int64(be)),
-			Addresses: []common.Address{
-				contractAddress,
-			},
-			Topics: [][]common.Hash{
-				{topic},
-			},
+		if withParam {
+			/// @dev Filter query with topic param
+			query = ethereum.FilterQuery{
+				FromBlock: big.NewInt(int64(bs)),
+				ToBlock:   big.NewInt(int64(be)),
+				Addresses: []common.Address{
+					contractAddress,
+				},
+				Topics: [][]common.Hash{
+					{topic},
+				},
+			}
+		} else {
+			query = ethereum.FilterQuery{
+				FromBlock: big.NewInt(int64(bs)),
+				ToBlock:   big.NewInt(int64(be)),
+				Addresses: []common.Address{
+					contractAddress,
+				},
+			}
 		}
 
 		_logs, err := geth.FilterLogs(context.Background(), query)
@@ -140,9 +119,9 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 
 	/// @dev Retrieve all events
 	/// @notice This is needed since the PunkBought event is emitted from buyPunk and acceptBidForPunk
-	var boughtLogs [][]types.Log = Filter(geth, contractAddress, blockStart, blockEnd)
+	var boughtLogs [][]types.Log = Filter(geth, contractAddress, blockStart, blockEnd, logPunkBoughtSigHash, false)
 	/// @dev Retrieve all PunkBidEntered events from the first punk block until the current block
-	var bidLogs [][]types.Log = FilterWithTopic(geth, contractAddress, uint64(PUNK_FIRST_BLOCK), blockEnd, logPunkBidEnteredSigHash)
+	var bidLogs [][]types.Log = Filter(geth, contractAddress, uint64(PUNK_FIRST_BLOCK), blockEnd, logPunkBidEnteredSigHash, true)
 	var punkSales []map[string]string
 	// var punkSales = make(map[string]map[string]string)
 
