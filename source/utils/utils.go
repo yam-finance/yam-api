@@ -2,14 +2,24 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"math/big"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
+	erc20 "yam-api/source/contracts/erc20"
+	IndexStakingRewards "yam-api/source/contracts/indexStakingRewards"
+	sushi "yam-api/source/contracts/sushi"
+	sushibar "yam-api/source/contracts/sushibar"
+	"yam-api/source/utils/contractAddress"
 	"yam-api/source/utils/etherscan/response"
 	"yam-api/source/utils/log"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type empList struct {
@@ -186,4 +196,116 @@ func GetDevMiningEmps() empList {
 		result.EmpWhiteList[i] = item
 	}
 	return result
+}
+func GetBalance(tokenAddress string, userAddress string, geth *ethclient.Client, decimals int) *big.Float {
+	tokenContract := GetErc20Contract(tokenAddress, geth)
+	balance, err := tokenContract.BalanceOf(nil, common.HexToAddress(userAddress))
+	if err != nil {
+		log.Error(err)
+	}
+	return BnToDec(balance, decimals)
+}
+func GetErc20Contract(address string, geth *ethclient.Client) *erc20.Erc20 {
+	erc20Contract, err := erc20.NewErc20(common.HexToAddress(address), geth)
+	if err != nil {
+		log.Error(err)
+	}
+	return erc20Contract
+}
+func GetYUSDPrice() *big.Float {
+	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/yvault-lp-ycurve")
+	if err != nil {
+		log.Error(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err)
+	}
+	sb := string(body)
+	var result map[string]interface{}
+	json.Unmarshal([]byte(sb), &result)
+
+	market_data := result["market_data"].(map[string]interface{})
+	current_price := market_data["current_price"].(map[string]interface{})
+	return big.NewFloat(current_price["usd"].(float64))
+}
+func GetValue(asset_name string) *big.Float {
+	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/" + asset_name)
+	if err != nil {
+		log.Error(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err)
+	}
+	sb := string(body)
+	var result map[string]interface{}
+	json.Unmarshal([]byte(sb), &result)
+
+	market_data := result["market_data"].(map[string]interface{})
+	current_price := market_data["current_price"].(map[string]interface{})
+	return big.NewFloat(current_price["usd"].(float64))
+}
+func GetIndexCoopLPRewards(geth *ethclient.Client) *big.Float {
+	IndexStakingRewardsContract, err := IndexStakingRewards.NewIndexStakingRewards(common.HexToAddress(contractAddress.IndexStakingRewards), geth)
+	if err != nil {
+		log.Error(err)
+	}
+	lpBalanceRewards, err := IndexStakingRewardsContract.Earned(nil, common.HexToAddress(contractAddress.ContractIndexStaking))
+	if err != nil {
+		log.Error("failed to get lpBalanceRewards: %v", err)
+	}
+	return BnToDec(lpBalanceRewards, 18)
+
+}
+func GetSushiRewards(geth *ethclient.Client) *big.Float {
+	sushiContract, err := sushi.NewSushi(common.HexToAddress(contractAddress.SushiToken), geth)
+	if err != nil {
+		log.Error(err)
+	}
+	sushibarContract, err := sushibar.NewSushibar(common.HexToAddress(contractAddress.SushibarXSushi), geth)
+	if err != nil {
+		log.Error(err)
+	}
+	incentivizerBalance, err := sushibarContract.BalanceOf(nil, common.HexToAddress(contractAddress.ContractIncentivizer))
+	if err != nil {
+		log.Error("failed to get incentivizerBalance: %v", err)
+	}
+	xSushiTotalSupply, err := sushibarContract.TotalSupply(nil)
+	if err != nil {
+		log.Error("failed to get xSushiTotalSupply: %v", err)
+	}
+	sushiXSushiBalance, err := sushiContract.BalanceOf(nil, common.HexToAddress(contractAddress.SushibarXSushi))
+	if err != nil {
+		log.Error("failed to get sushiXSushiBalance: %v", err)
+	}
+	SushiBalance, err := sushiContract.BalanceOf(nil, common.HexToAddress(contractAddress.ContractIncentivizer))
+	if err != nil {
+		log.Error("failed to get SushiBalance: %v", err)
+	}
+	incentivizerBalanceF := BnToDec(incentivizerBalance, 18)
+	xSushiTotalSupplyF := BnToDec(xSushiTotalSupply, 18)
+	sushiXSushiBalanceF := BnToDec(sushiXSushiBalance, 18)
+	SushiBalanceF := BnToDec(SushiBalance, 18)
+	ret := new(big.Float).Add(SushiBalanceF, new(big.Float).Quo(new(big.Float).Mul(incentivizerBalanceF, sushiXSushiBalanceF), xSushiTotalSupplyF))
+	return ret
+}
+func GetYamHousePrice() *big.Float {
+	resp, err := http.Get("https://api.tokensets.com/public/v2/portfolios/yamhouse")
+	if err != nil {
+		log.Error(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err)
+	}
+	sb := string(body)
+	var result map[string]interface{}
+	json.Unmarshal([]byte(sb), &result)
+
+	portfolio := result["portfolio"].(map[string]interface{})
+
+	s, err := strconv.ParseFloat(portfolio["price_usd"].(string), 64)
+	fmt.Println("asdfasdfds = ", s)
+	return big.NewFloat(s)
 }
