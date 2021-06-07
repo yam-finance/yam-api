@@ -253,13 +253,13 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 		var values []map[string]interface{}
 		dayCount := 0
 
-		for _, result := range resultsFiltered {
-			price := result["price"].(string)
-			timestamp := result["timestamp"].(string)
-			unixTimestamp, _ := strconv.Atoi(result["timestamp"].(string))
+		for i := len(resultsFiltered) - 1; i >= 0 && dayCount < 30; i-- {
+			price := resultsFiltered[i]["price"].(string)
+			timestamp := resultsFiltered[i]["timestamp"].(string)
+			unixTimestamp, _ := strconv.Atoi(resultsFiltered[i]["timestamp"].(string))
 			timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
 
-			if strings.Contains(timeT, "01:00") && dayCount < 30 {
+			if strings.Contains(timeT, "01:0") {
 				obj := map[string]interface{}{
 					"price":     price,
 					"timestamp": timestamp,
@@ -267,6 +267,7 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 				}
 
 				dayCount = dayCount + 1
+				i--
 				values = append([]map[string]interface{}{obj}, values...)
 			}
 		}
