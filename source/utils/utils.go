@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"math"
 	"math/big"
@@ -212,23 +211,6 @@ func GetErc20Contract(address string, geth *ethclient.Client) *erc20.Erc20 {
 	}
 	return erc20Contract
 }
-func GetYUSDPrice() *big.Float {
-	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/yvault-lp-ycurve")
-	if err != nil {
-		log.Error(err)
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error(err)
-	}
-	sb := string(body)
-	var result map[string]interface{}
-	json.Unmarshal([]byte(sb), &result)
-
-	market_data := result["market_data"].(map[string]interface{})
-	current_price := market_data["current_price"].(map[string]interface{})
-	return big.NewFloat(current_price["usd"].(float64))
-}
 func GetValue(asset_name string) *big.Float {
 	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/" + asset_name)
 	if err != nil {
@@ -306,6 +288,5 @@ func GetYamHousePrice() *big.Float {
 	portfolio := result["portfolio"].(map[string]interface{})
 
 	s, err := strconv.ParseFloat(portfolio["price_usd"].(string), 64)
-	fmt.Println("asdfasdfds = ", s)
 	return big.NewFloat(s)
 }

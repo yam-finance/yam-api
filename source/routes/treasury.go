@@ -27,7 +27,7 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		yUsdBalance := utils.GetBalance(contractAddress.YUsd, contractAddress.TreasuryAddress, geth, 18)
 
 		yamTwap := utils.GetPriceByContract(contractAddress.Yamv3)
-		yusdPrice := utils.GetYUSDPrice()
+		yusdPrice := utils.GetValue("yvault-lp-ycurve")
 		wethPrice := utils.GetWETHPrice()
 		dpiPrice := utils.GetValue("defipulse-index")
 		indexPrice := utils.GetValue("index-cooperative")
