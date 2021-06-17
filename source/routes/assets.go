@@ -39,7 +39,7 @@ type Content []struct {
 	} `json:"apr"`
 }
 
-func GetAssets(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+func GetAssetsJson(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := http.Get("https://raw.githubusercontent.com/yam-finance/degenerative/develop/protocol/assets.json")
