@@ -15,7 +15,6 @@
 # vendor/
 # local env files
 .env
-.credentials.json
 
 start
 .vscode
