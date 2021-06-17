@@ -34,13 +34,13 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	Version("/version", router, conf)
 	Block("/block", router, conf, geth)
 
-	// YAM
+	// YAM Stats
 	Treasury("/treasury", router, conf, geth)
 	Apr("/apr", router, conf, geth)
 	AprYam("/apr/yam", router, conf, geth)
 	AprDegenerative("/apr/degenerative", router, conf, geth)
 
-	// Degenerativde
+	// Degenerative
 	GetAssetsJson("/degenerative/assets", router, conf, geth)
 	AprDegenerative("/degenerative/apr", router, conf, geth)
 	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)
