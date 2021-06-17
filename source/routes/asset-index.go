@@ -100,25 +100,22 @@ func FetchAssetIndex() map[string]interface{} {
 
 	// Prints the names and majors of students in a sample spreadsheet:
 	// https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-	spreadsheetId := ""
-	readRange := "Class Data!A2:E"
+	spreadsheetId := "1ghUzXmKIcxJgfLIymZZ373iUPpVAfWfqZcdv4hCxhKk"
+	readRange := "M50"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve data from sheet: %v", err)
 	}
 
+	var price interface{}
+
 	if len(resp.Values) == 0 {
-		fmt.Println("No data found.")
+		log.Fatalf("No data found.")
 	} else {
-		fmt.Println("Name, Major:")
-		for _, row := range resp.Values {
-			// Print columns A and E, which correspond to indices 0 and 4.
-			fmt.Printf("%s, %s\n", row[0], row[4])
-		}
+		price = resp.Values[0][0]
 	}
 
-	// TODO: Update passed values
-	values := map[string]interface{}{"cycle": "USTONKS-0121", "price": "0", "timestamp": strconv.Itoa(eval_ts)}
+	values := map[string]interface{}{"cycle": "USTONKS-0121", "price": price, "timestamp": strconv.Itoa(eval_ts)}
 
 	return values
 }
