@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -79,15 +78,27 @@ func saveToken(path string, token *oauth2.Token) {
 
 func FetchAssetIndex() map[string]interface{} {
 	eval_ts := int(time.Now().UTC().Unix())
-
 	ctx := context.Background()
-	b, err := ioutil.ReadFile(".credentials.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
+
+	clientSecret := os.Getenv("CLIENT_SECRET")
+	b := fmt.Sprintf(
+	`{
+	    "installed": {
+	      "client_id": "697263365567-06hbtfo7cksb54l052n9mv0l053a8pmu.apps.googleusercontent.com",
+	      "project_id": "quickstart-1615241292139",
+	      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+	      "token_uri": "https://oauth2.googleapis.com/token",
+	      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+	      "client_secret": "%s",
+	      "redirect_uris": [
+	        "urn:ietf:wg:oauth:2.0:oob",
+	        "http://localhost"
+	      ]
+	    }
+	  }`, clientSecret)
 
 	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets.readonly")
+	config, err := google.ConfigFromJSON([]byte(b), "https://www.googleapis.com/auth/spreadsheets.readonly")
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
@@ -98,9 +109,7 @@ func FetchAssetIndex() map[string]interface{} {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	// Prints the names and majors of students in a sample spreadsheet:
-	// https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-	spreadsheetId := "1ghUzXmKIcxJgfLIymZZ373iUPpVAfWfqZcdv4hCxhKk"
+	spreadsheetId := os.Getenv("SHEET_ID")
 	readRange := "M50"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
 	if err != nil {
@@ -114,6 +123,8 @@ func FetchAssetIndex() map[string]interface{} {
 	} else {
 		price = resp.Values[0][0]
 	}
+
+	fmt.Println(price)
 
 	values := map[string]interface{}{"cycle": "USTONKS-0121", "price": price, "timestamp": strconv.Itoa(eval_ts)}
 
