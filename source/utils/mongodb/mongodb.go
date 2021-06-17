@@ -347,6 +347,7 @@ func GetAssetIndexHistoryDaily() []map[string]interface{} {
 		dayCount := 0
 
 		for i := len(resultsFiltered) - 1; i >= 0 && dayCount < 30; i-- {
+			cycle := resultsFiltered[i]["cycle"].(string)
 			price := resultsFiltered[i]["price"].(string)
 			timestamp := resultsFiltered[i]["timestamp"].(string)
 			unixTimestamp, _ := strconv.Atoi(resultsFiltered[i]["timestamp"].(string))
