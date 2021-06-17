@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	"yam-api/source/config"
 	"yam-api/source/utils"
@@ -64,8 +65,11 @@ func checkError(err error) {
 
 func GetLatestUStonksIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		cycle := query.Get("cycle")
+
 		/// @dev Retrieve values from db
-		values := mongodb.GetLatestAssetIndex()
+		values := mongodb.GetLatestAssetIndex(strings.ToUpper(cycle))
 		if values == nil {
 			values = map[string]interface{}{
 				"cycle":     "0",
@@ -86,8 +90,11 @@ func GetLatestUStonksIndex(path string, router chi.Router, conf *config.Config, 
 
 func GetLatestUStonksIndexHistory(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		cycle := query.Get("cycle")
+
 		/// @dev Retrieve values from db
-		history := mongodb.GetAssetIndexHistoryDaily()
+		history := mongodb.GetAssetIndexHistoryDaily(strings.ToUpper(cycle))
 		if history == nil {
 			history = []map[string]interface{}{
 				{

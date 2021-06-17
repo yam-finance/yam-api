@@ -278,7 +278,7 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 	}
 }
 
-func GetLatestAssetIndex() map[string]interface{} {
+func GetLatestAssetIndex(_cycle string) map[string]interface{} {
 	if client != nil {
 		// result := PunkIndex{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -293,7 +293,7 @@ func GetLatestAssetIndex() map[string]interface{} {
 		// }
 
 		// @dev Find last document in collection
-		filterCursor, err := punkCollection.Find(ctx, bson.M{})
+		filterCursor, err := punkCollection.Find(ctx, bson.M{"cycle": _cycle})
 		if err != nil {
 			log.Fatal("Latest Index filterCursor", err)
 			return nil
@@ -309,14 +309,14 @@ func GetLatestAssetIndex() map[string]interface{} {
 		cycle := resultsFiltered[len(resultsFiltered)-1]["cycle"].(string)
 		price := resultsFiltered[len(resultsFiltered)-1]["price"].(string)
 		timestamp := resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string)
-		// unixTimestamp, _ := strconv.Atoi(resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string))
-		// timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
+		unixTimestamp, _ := strconv.Atoi(resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string))
+		timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
 
 		values := map[string]interface{}{
-			"cycle":     cycle,
-			"price":     price,
-			"timestamp": timestamp,
-			// "timestampDate": timeT,
+			"cycle":         cycle,
+			"price":         price,
+			"timestamp":     timestamp,
+			"timestampDate": timeT,
 		}
 
 		return values
@@ -325,14 +325,14 @@ func GetLatestAssetIndex() map[string]interface{} {
 	}
 }
 
-func GetAssetIndexHistoryDaily() []map[string]interface{} {
+func GetAssetIndexHistoryDaily(_cycle string) []map[string]interface{} {
 	if client != nil {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
 		punkCollection := databaseRef.Collection("ustonks")
 
 		// @dev Find last document in collection
-		filterCursor, err := punkCollection.Find(ctx, bson.M{})
+		filterCursor, err := punkCollection.Find(ctx, bson.M{"cycle": _cycle})
 		if err != nil {
 			log.Fatal("Index history filterCursor", err)
 			return nil
@@ -355,10 +355,10 @@ func GetAssetIndexHistoryDaily() []map[string]interface{} {
 
 			if strings.Contains(timeT, "01:0") {
 				obj := map[string]interface{}{
-					"cycle":     cycle,
-					"price":     price,
-					"timestamp": timestamp,
-					// "timestampDate": timeT,
+					"cycle":         cycle,
+					"price":         price,
+					"timestamp":     timestamp,
+					"timestampDate": timeT,
 				}
 
 				dayCount = dayCount + 1
