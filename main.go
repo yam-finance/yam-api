@@ -32,7 +32,9 @@ func run() error {
 	/// @notice Asset Index scheduler
 	storeAssetIndexCron := cron.New()
 	storeAssetIndexCron.AddFunc("@every 5m", func() {
-		values := routes.FetchAssetIndex()
+		values := routes.FetchAssetIndex("apr21", "USTONKS-0421")
+		mongodb.InsertAssetIndex(values)
+		values = routes.FetchAssetIndex("jun21", "USTONKS-0621")
 		mongodb.InsertAssetIndex(values)
 	})
 	storeAssetIndexCron.Start()
