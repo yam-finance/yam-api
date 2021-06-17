@@ -13,8 +13,16 @@ import (
 )
 
 type Response struct {
-	Ugas    Content `json:"ugas"`
+	Mainnet Synth `json:"mainnet"`
+	Kovan Synth `json:"kovan"`
+}
+
+type Synth struct {
+	Ugas Content `json:"ugas"`
 	Ustonks Content `json:"ustonks"`
+	Upunks Content `json:"upunks"`
+	Uvolbtc Content `json:"uvolbtc"`
+	Yamdollar Content `json:"yamdollar"`
 }
 
 type Content []struct {
@@ -31,12 +39,10 @@ type Content []struct {
 		New     bool   `json:"new"`
 	} `json:"emp"`
 	Pool struct {
-		Address string `json:"address"`
+		Address  string `json:"address"`
+		Location string `json:"location"`
 	} `json:"pool"`
-	Apr struct {
-		Force int `json:"force"`
-		Extra int `json:"extra"`
-	} `json:"apr"`
+	Expired bool `json:"expired"`
 }
 
 func GetAssetsJson(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
