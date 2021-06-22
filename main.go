@@ -36,7 +36,7 @@ func run() error {
 	})
 	calculatePunkIndexCron.Start()
 
-	getAprYamCron := cron.New()
+	/*getAprYamCron := cron.New()
 	getAprYamCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateAprYam(geth)
 		routes.StoreAprYam(val)
@@ -48,7 +48,7 @@ func run() error {
 		val := routes.CalculateAprDegenerative(geth)
 		routes.StoreAprDegenerative(val)
 	})
-	getAprDegenerativeCron.Start()
+	getAprDegenerativeCron.Start()*/
 
 	routes := routes.Initialize(conf, geth)
 	return source.Serve(conf, routes)
