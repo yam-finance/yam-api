@@ -57,12 +57,12 @@ func run() error {
 	getAprYamCron.Start()
 
 	/// @notice Degenerative APR scheduler
-	getAprDegenerativeCron := cron.New()
+	/*getAprDegenerativeCron := cron.New()
 	getAprDegenerativeCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateAprDegenerative(geth)
 		routes.StoreAprDegenerative(val)
 	})
-	getAprDegenerativeCron.Start()
+	getAprDegenerativeCron.Start()*/
 
 	routes := routes.Initialize(conf, geth)
 	return source.Serve(conf, routes)

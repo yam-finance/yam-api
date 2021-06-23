@@ -29,27 +29,32 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	router.Use(middleware.Logger)
 	router.Use(cors.Handler)
 
-	// /
+	// General
 	Index("/", router, conf)
 	Version("/version", router, conf)
 	Block("/block", router, conf, geth)
+	GasStats("/account-stats", router, conf, geth)
 
 	// YAM Stats
 	Treasury("/treasury", router, conf, geth)
+	Tvl("/tvl", router, conf, geth)
+	TvlYam("/tvl/yam", router, conf, geth)
+	TvlDegenerative("/tvl/degenerative", router, conf, geth)
 	Apr("/apr", router, conf, geth)
 	AprYam("/apr/yam", router, conf, geth)
-	AprDegenerative("/apr/degenerative", router, conf, geth)
+	// AprDegenerative("/apr/degenerative", router, conf, geth)
 
-	// Degenerative
-	GetAssetsJson("/degenerative/assets", router, conf, geth)
-	AprDegenerative("/degenerative/apr", router, conf, geth)
-	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)
-	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)
-	GetLatestUStonksIndex("/degenerative/ustonks/index", router, conf, geth)
-	GetLatestUStonksIndexHistory("/degenerative/ustonks/index-history", router, conf, geth)
+	// Yam Synths (Degenerative)
+	GetAssetsJson("/synths/assets", router, conf, geth)
+	GetLatestPunkIndex("/synths/upunks/price", router, conf, geth)
+	GetPunkIndexHistory("/synths/upunks/price-history", router, conf, geth)
+	GetAssetsJson("/degenerative/assets", router, conf, geth)                                   // to remove later
+	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)                    // to remove later
+	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)           // to remove later
+  GetLatestUStonksIndex("/degenerative/ustonks/index", router, conf, geth)                // to remove later 
+	GetLatestUStonksIndexHistory("/degenerative/ustonks/index-history", router, conf, geth) // to remove later
 
-	// Other
-	GasStats("/account-stats", router, conf, geth)
+	// Yam Protection (Umbrella)
 
 	return router
 }
