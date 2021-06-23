@@ -49,9 +49,9 @@ func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		result := map[string]interface{}{}
 
 		result["farm"] = tvlYam
-		result["UGAS"] = values["UGAS"]
-		result["USTONKS"] = values["USTONKS"]
-		result["UPUNKS"] = values["UPUNKS"]
+		result["UGAS"] = values["Ugas"]
+		result["USTONKS"] = values["Ustonks"]
+		result["UPUNKS"] = values["Upunks"]
 		response["values"] = result
 		response["total"] = tvlYam + total
 		utils.ResJSON(http.StatusCreated, w,
