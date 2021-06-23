@@ -113,6 +113,43 @@ func InsertAprDegenerative(val map[string]interface{}) {
 	}
 }
 
+// TODO: Add cycle
+// TODO: Merge with InsertAssetIndex()
+func InsertPunkIndex(val map[string]interface{}) {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		punkCollection := databaseRef.Collection("upunks")
+
+		/// @dev Insert new values
+		_, err := punkCollection.InsertOne(ctx, bson.D{
+			{Key: "price", Value: val["price"]},
+			{Key: "timestamp", Value: val["timestamp"]},
+		})
+		if err != nil {
+			log.Fatal("InsertPunkIndex", err)
+		}
+	}
+}
+
+func InsertAssetIndex(val map[string]interface{}) {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		punkCollection := databaseRef.Collection("ustonks")
+
+		/// @dev Insert new values
+		_, err := punkCollection.InsertOne(ctx, bson.D{
+			{Key: "cycle", Value: val["cycle"]},
+			{Key: "price", Value: val["price"]},
+			{Key: "timestamp", Value: val["timestamp"]},
+		})
+		if err != nil {
+			log.Fatal("InsertAssetIndex", err)
+		}
+	}
+}
+
 func GetAprYam() map[string]interface{} {
 	if client != nil {
 		result := AprYam{}
@@ -147,24 +184,8 @@ func GetAprDegenerative() map[string]interface{} {
 	return nil
 }
 
-func InsertPunkIndex(val map[string]interface{}) {
-	if client != nil {
-		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		databaseRef := client.Database(dbName)
-		punkCollection := databaseRef.Collection("upunks")
-
-		/// @dev Insert new values
-		_, err := punkCollection.InsertOne(ctx, bson.D{
-			{Key: "price", Value: val["price"]},
-			{Key: "timestamp", Value: val["timestamp"]},
-		})
-		if err != nil {
-			log.Fatal("InsertPunkIndex", err)
-		}
-	}
-}
-
-func GetLatestPunkIndex() map[string]interface{} {
+// TODO: Merge with GetLatestAssetIndex()
+func GetPunkIndex() map[string]interface{} {
 	if client != nil {
 		// result := PunkIndex{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -209,6 +230,7 @@ func GetLatestPunkIndex() map[string]interface{} {
 	}
 }
 
+// TODO: Merge with GetLatestAssetIndex()
 func GetPunkIndexHistoryDaily() []map[string]interface{} {
 	if client != nil {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -241,6 +263,101 @@ func GetPunkIndexHistoryDaily() []map[string]interface{} {
 					"price":     price,
 					"timestamp": timestamp,
 					// "timestampDate": timeT,
+				}
+
+				dayCount = dayCount + 1
+				i--
+				values = append([]map[string]interface{}{obj}, values...)
+			}
+		}
+
+		return values
+	} else {
+		return nil
+	}
+}
+
+func GetLatestAssetIndex(_cycle string) map[string]interface{} {
+	if client != nil {
+		// result := PunkIndex{}
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		punkCollection := databaseRef.Collection("ustonks")
+
+		// @dev Find a document that meets certain criteria
+		// err := punkCollection.FindOne(ctx, bson.M{}).Decode(&result)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// 	return nil
+		// }
+
+		// @dev Find last document in collection
+		filterCursor, err := punkCollection.Find(ctx, bson.M{"cycle": _cycle})
+		if err != nil {
+			log.Fatal("Latest Index filterCursor", err)
+			return nil
+		}
+		var resultsFiltered []bson.M
+		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
+			log.Fatal("Latest Index resultsFiltered", err)
+			return nil
+		} else if len(resultsFiltered) == 0 {
+			return nil
+		}
+
+		cycle := resultsFiltered[len(resultsFiltered)-1]["cycle"].(string)
+		price := resultsFiltered[len(resultsFiltered)-1]["price"].(string)
+		timestamp := resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string)
+		unixTimestamp, _ := strconv.Atoi(resultsFiltered[len(resultsFiltered)-1]["timestamp"].(string))
+		timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
+
+		values := map[string]interface{}{
+			"cycle":         cycle,
+			"price":         price,
+			"timestamp":     timestamp,
+			"timestampDate": timeT,
+		}
+
+		return values
+	} else {
+		return nil
+	}
+}
+
+func GetAssetIndexHistoryDaily(_cycle string) []map[string]interface{} {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		punkCollection := databaseRef.Collection("ustonks")
+
+		// @dev Find last document in collection
+		filterCursor, err := punkCollection.Find(ctx, bson.M{"cycle": _cycle})
+		if err != nil {
+			log.Fatal("Index history filterCursor", err)
+			return nil
+		}
+		var resultsFiltered []bson.M
+		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
+			log.Fatal("Index history resultsFiltered", err)
+			return nil
+		}
+
+		var values []map[string]interface{}
+		dayCount := 0
+
+		for i := len(resultsFiltered) - 1; i >= 0 && dayCount < 30; i-- {
+			cycle := resultsFiltered[i]["cycle"].(string)
+			price := resultsFiltered[i]["price"].(string)
+			timestamp := resultsFiltered[i]["timestamp"].(string)
+			unixTimestamp, _ := strconv.Atoi(resultsFiltered[i]["timestamp"].(string))
+			timeT := time.Unix(int64(unixTimestamp), 0).UTC().String()
+
+			if strings.Contains(timeT, "01:0") {
+				obj := map[string]interface{}{
+					"cycle":         cycle,
+					"price":         price,
+					"timestamp":     timestamp,
+					"timestampDate": timeT,
 				}
 
 				dayCount = dayCount + 1
