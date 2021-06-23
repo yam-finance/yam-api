@@ -43,13 +43,13 @@ func Apr(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		if aprYam == nil {
 			aprYam = map[string]interface{}{}
 		}
-		aprDegenerative := mongodb.GetAprDegenerative()
+		/*aprDegenerative := mongodb.GetAprDegenerative()
 		if aprDegenerative == nil {
 			aprDegenerative = map[string]interface{}{}
-		}
+		}*/
 
 		response["yam"] = aprYam
-		response["degenerative"] = aprDegenerative
+		//response["degenerative"] = aprDegenerative
 		utils.ResJSON(http.StatusCreated, w,
 			response,
 		)
@@ -94,7 +94,7 @@ func CalculateAprYam(geth *ethclient.Client) map[string]interface{} {
 		log.Fatalf("failed to get yamprice: %v", err)
 	}
 	val, _ := temp2.Float64()
-	result["farm"] = val
+	result["farm"] = math.Floor(val*100) / 100
 	return result
 
 }
