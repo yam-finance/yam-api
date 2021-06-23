@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"reflect"
 	"yam-api/source/config"
 	erc20 "yam-api/source/contracts/erc20"
 	masterchef "yam-api/source/contracts/masterchef"
@@ -127,64 +128,37 @@ func CalculateTvlDegenerativeAll(geth *ethclient.Client) (map[string]interface{}
 	json.Unmarshal([]byte(byteValue), &AssetsFromFile)
 
 	wethPrice := utils.GetWETHPrice()
-	var UGAS map[string]float64
-	var USTONKS map[string]float64
-	var UPUNKS map[string]float64
 	var result map[string]interface{}
-	UGAS = make(map[string]float64)
-	USTONKS = make(map[string]float64)
-	UPUNKS = make(map[string]float64)
 	result = make(map[string]interface{})
 	var total float64
 	total = 0
-	//////  Calculating UGAS ///////
-	for _, ugas := range AssetsFromFile.Assets.Ugas {
-		if ugas.Expired != true {
-			var ugasTvl float64
-			if ugas.Collateral == "WETH" {
-				wethPrice = utils.GetWETHPrice()
-				ugasTvl = CalculateTvlDegenerative(ugas.Emp.Address, geth, wethPrice, true)
-			} else {
-				wethPrice = big.NewFloat(1)
-				ugasTvl = CalculateTvlDegenerative(ugas.Emp.Address, geth, wethPrice, false)
+	v := reflect.ValueOf(AssetsFromFile.Assets)
+	values := make([]interface{}, v.NumField())
+	assetTypes := reflect.Indirect(reflect.ValueOf(AssetsFromFile.Assets))
+	for i := 0; i < v.NumField(); i++ {
+		values[i] = v.Field(i).Interface()
+		var assetArray []AssetInstance
+		byteData, _ := json.Marshal(values[i])
+		json.Unmarshal(byteData, &assetArray)
+		var assetTvls map[string]float64
+		assetTvls = make(map[string]float64)
+		for _, assetItem := range assetArray {
+
+			if assetItem.Expired != true {
+				var assetTvl float64
+				if assetItem.Collateral == "WETH" {
+					wethPrice = utils.GetWETHPrice()
+					assetTvl = CalculateTvlDegenerative(assetItem.Emp.Address, geth, wethPrice, true)
+				} else {
+					wethPrice = big.NewFloat(1)
+					assetTvl = CalculateTvlDegenerative(assetItem.Emp.Address, geth, wethPrice, false)
+				}
+				assetTvls[assetItem.Cycle] = assetTvl
+				total = total + assetTvl
 			}
-			UGAS[ugas.Cycle] = ugasTvl
-			total = total + ugasTvl
 		}
+		result[assetTypes.Type().Field(i).Name] = assetTvls
 	}
-	//////  Calculating USTONKS ///////
-	for _, ustonks := range AssetsFromFile.Assets.Ustonks {
-		if ustonks.Expired != true {
-			var ustonksTvl float64
-			if ustonks.Collateral == "WETH" {
-				wethPrice = utils.GetWETHPrice()
-				ustonksTvl = CalculateTvlDegenerative(ustonks.Emp.Address, geth, wethPrice, true)
-			} else {
-				wethPrice = big.NewFloat(1)
-				ustonksTvl = CalculateTvlDegenerative(ustonks.Emp.Address, geth, wethPrice, false)
-			}
-			USTONKS[ustonks.Cycle] = ustonksTvl
-			total = total + ustonksTvl
-		}
-	}
-	//////  Calculating UPUNKS ///////
-	for _, upunks := range AssetsFromFile.Assets.Upunks {
-		if upunks.Expired != true {
-			var upunksTvl float64
-			if upunks.Collateral == "WETH" {
-				wethPrice = utils.GetWETHPrice()
-				upunksTvl = CalculateTvlDegenerative(upunks.Emp.Address, geth, wethPrice, true)
-			} else {
-				wethPrice = big.NewFloat(1)
-				upunksTvl = CalculateTvlDegenerative(upunks.Emp.Address, geth, wethPrice, false)
-			}
-			UPUNKS[upunks.Cycle] = upunksTvl
-			total = total + upunksTvl
-		}
-	}
-	result["UGAS"] = UGAS
-	result["USTONKS"] = USTONKS
-	result["UPUNKS"] = UPUNKS
 	return result, total
 }
 func CalculateTvlYam(geth *ethclient.Client) float64 {
@@ -218,11 +192,8 @@ func CalculateTvlYam(geth *ethclient.Client) float64 {
 	//yamPriceFloat := utils.BnToDec(yamPrice, 18)
 	totalIncentivizerValue := userInfo.Amount
 	wethPrice := utils.GetWETHPrice()
-
-	temp1 := new(big.Float).Quo(new(big.Float).SetInt(totalIncentivizerValue), new(big.Float).SetInt(totalSLPSupply))
-	temp2 := new(big.Float).Add(new(big.Float).Mul(ethValue, wethPrice), new(big.Float).Mul(yamValue, yamPrice))
-	temp3 := new(big.Float).Mul(temp1, temp2)
-	val, _ := temp3.Float64()
-	tvl := math.Round(val)
+	tvlBigFloat := new(big.Float).Mul(new(big.Float).Quo(new(big.Float).SetInt(totalIncentivizerValue), new(big.Float).SetInt(totalSLPSupply)), new(big.Float).Add(new(big.Float).Mul(ethValue, wethPrice), new(big.Float).Mul(yamValue, yamPrice)))
+	tvlFloat64, _ := tvlBigFloat.Float64()
+	tvl := math.Round(tvlFloat64)
 	return tvl
 }
