@@ -35,7 +35,7 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	Block("/block", router, conf, geth)
 	GasStats("/account-stats", router, conf, geth)
 
-	// YAM Stats
+	// YAM
 	Treasury("/treasury", router, conf, geth)
 	Tvl("/tvl", router, conf, geth)
 	TvlYam("/tvl/yam", router, conf, geth)
