@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"math/big"
 	"net/http"
 	"yam-api/source/config"
@@ -52,14 +53,15 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		umaTreasury := new(big.Float).Mul(totalUMAValue, umaPrice)
 		yamHouseTreasury := new(big.Float).Mul(totalYamHouseValue, yamHousePrice)
 		sushiTreasury := new(big.Float).Mul(rewardsSushi, sushiPrice)
-		response["uma"] = umaTreasury
-		response["yamHouse"] = yamHouseTreasury
-		response["dpi"] = dpiTreasury
-		response["weth"] = wethTreasury
-		response["yyDAI+"], _ = yUSDTreasury.Float64()
-		response["index"] = indexTreasury
-		response["indexlp"] = indexLPTreasury
-		response["sushi"] = sushiTreasury
+
+		response["uma"] = fmt.Sprintf("%.2f", umaTreasury)
+		response["yamHouse"] = fmt.Sprintf("%.2f", yamHouseTreasury)
+		response["dpi"] = fmt.Sprintf("%.2f", dpiTreasury)
+		response["weth"] = fmt.Sprintf("%.2f", wethTreasury)
+		response["yyDAI+"] = fmt.Sprintf("%.2f", yUSDTreasury)
+		response["index"] = fmt.Sprintf("%.2f", indexTreasury)
+		response["indexlp"] = fmt.Sprintf("%.2f", indexLPTreasury)
+		response["sushi"] = fmt.Sprintf("%.2f", sushiTreasury)
 
 		utils.ResJSON(http.StatusCreated, w,
 			response,
