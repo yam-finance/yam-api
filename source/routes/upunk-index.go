@@ -258,10 +258,10 @@ func CalculatePunkIndex(geth *ethclient.Client) map[string]interface{} {
 
 // --------- uPunk Endpoints ---------
 
-func GetLatestPunkIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+func GetPunkIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		/// @dev Retrieve values from db
-		values := mongodb.GetLatestPunkIndex()
+		values := mongodb.GetPunkIndex()
 		if values == nil {
 			values = map[string]interface{}{
 				"price":     "0",

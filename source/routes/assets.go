@@ -1,48 +1,21 @@
 package routes
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"yam-api/source/config"
 	"yam-api/source/utils"
 
+	"github.com/Jeffail/gabs"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
 )
 
-type Response struct {
-	Ugas    Content `json:"ugas"`
-	Ustonks Content `json:"ustonks"`
-}
-
-type Content []struct {
-	Name       string `json:"name"`
-	Cycle      string `json:"cycle"`
-	Year       string `json:"year"`
-	Collateral string `json:"collateral"`
-	Token      struct {
-		Address  string `json:"address"`
-		Decimals int    `json:"decimals"`
-	} `json:"token"`
-	Emp struct {
-		Address string `json:"address"`
-		New     bool   `json:"new"`
-	} `json:"emp"`
-	Pool struct {
-		Address string `json:"address"`
-	} `json:"pool"`
-	Apr struct {
-		Force int `json:"force"`
-		Extra int `json:"extra"`
-	} `json:"apr"`
-}
-
-func GetAssets(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+func GetAssetsJson(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 
-		resp, err := http.Get("https://raw.githubusercontent.com/yam-finance/degenerative/develop/protocol/assets.json")
+		resp, err := http.Get("https://raw.githubusercontent.com/yam-finance/degenerative-sdk/master/src/assets.json")
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -50,11 +23,13 @@ func GetAssets(path string, router chi.Router, conf *config.Config, geth *ethcli
 		defer resp.Body.Close()
 		responseData, _ := ioutil.ReadAll(resp.Body)
 
-		var responseObject Response
-		json.Unmarshal(responseData, &responseObject)
+		responseObject, err := gabs.ParseJSON(responseData)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		utils.ResJSON(http.StatusCreated, w,
-			responseObject,
+			responseObject.Data(),
 		)
 	})
 }
