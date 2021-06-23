@@ -49,9 +49,9 @@ func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		result := map[string]interface{}{}
 
 		result["farm"] = tvlYam
-		result["UGAS"] = values["UGAS"]
-		result["USTONKS"] = values["USTONKS"]
-		result["UPUNKS"] = values["UPUNKS"]
+		result["UGAS"] = values["Ugas"]
+		result["USTONKS"] = values["Ustonks"]
+		result["UPUNKS"] = values["Upunks"]
 		response["values"] = result
 		response["total"] = tvlYam + total
 		utils.ResJSON(http.StatusCreated, w,
@@ -153,12 +153,13 @@ func CalculateTvlDegenerativeAll(geth *ethclient.Client) (map[string]interface{}
 					wethPrice = big.NewFloat(1)
 					assetTvl = CalculateTvlDegenerative(assetItem.Emp.Address, geth, wethPrice, false)
 				}
-				assetTvls[assetItem.Cycle] = assetTvl
+				assetTvls[assetItem.Cycle] = math.Floor(assetTvl*100) / 100
 				total = total + assetTvl
 			}
 		}
 		result[assetTypes.Type().Field(i).Name] = assetTvls
 	}
+	total = math.Floor(total*100) / 100
 	return result, total
 }
 func CalculateTvlYam(geth *ethclient.Client) float64 {
