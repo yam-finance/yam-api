@@ -46,13 +46,14 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 
 	// Yam Synths (Degenerative)
 	GetAssetsJson("/synths/assets", router, conf, geth)
-	GetLatestPunkIndex("/synths/upunks/price", router, conf, geth)
+	GetPunkIndex("/synths/upunks/price", router, conf, geth)
 	GetPunkIndexHistory("/synths/upunks/price-history", router, conf, geth)
-	GetAssetsJson("/degenerative/assets", router, conf, geth)                               // to remove later
-	GetLatestPunkIndex("/degenerative/upunks/price", router, conf, geth)                    // to remove later
-	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)           // to remove later
-  	GetLatestUStonksIndex("/degenerative/ustonks/index", router, conf, geth)                // to remove later
-	GetLatestUStonksIndexHistory("/degenerative/ustonks/index-history", router, conf, geth) // to remove later
+	GetUStonksIndex("/synths/ustonks/index", router, conf, geth)
+	GetUStonksIndexHistory("/synths/ustonks/index-history", router, conf, geth)
+
+	GetAssetsJson("/degenerative/assets", router, conf, geth)                         // to remove later
+	GetPunkIndex("/degenerative/upunks/price", router, conf, geth)                    // to remove later
+	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)     // to remove later
 
 	// Yam Protection (Umbrella)
 

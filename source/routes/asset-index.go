@@ -63,7 +63,7 @@ func checkError(err error) {
 
 // --------- uSTONKS Endpoints ---------
 
-func GetLatestUStonksIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+func GetUStonksIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 		cycle := query.Get("cycle")
@@ -88,7 +88,7 @@ func GetLatestUStonksIndex(path string, router chi.Router, conf *config.Config, 
 	})
 }
 
-func GetLatestUStonksIndexHistory(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+func GetUStonksIndexHistory(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 		cycle := query.Get("cycle")

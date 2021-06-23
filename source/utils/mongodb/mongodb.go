@@ -185,7 +185,7 @@ func GetAprDegenerative() map[string]interface{} {
 }
 
 // TODO: Merge with GetLatestAssetIndex()
-func GetLatestPunkIndex() map[string]interface{} {
+func GetPunkIndex() map[string]interface{} {
 	if client != nil {
 		// result := PunkIndex{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
