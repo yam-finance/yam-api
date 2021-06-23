@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go v0.82.0 // indirect
+	github.com/Jeffail/gabs v1.4.0 // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
 	github.com/ethereum/go-ethereum v1.9.23
 	github.com/go-chi/chi v4.1.2+incompatible
