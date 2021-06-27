@@ -8,11 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"yam-api/source/config"
 	"yam-api/source/utils"
 	"yam-api/source/utils/mongodb"
 
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
 	"golang.org/x/oauth2/google"
 	"gopkg.in/Iwark/spreadsheet.v2"
@@ -63,54 +61,50 @@ func checkError(err error) {
 
 // --------- uSTONKS Endpoints ---------
 
-func GetUStonksIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
-	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query()
-		cycle := query.Get("cycle")
+func GetUStonksIndex(w http.ResponseWriter, r *http.Request) {
+	cycle := chi.URLParam(r, "cycle")
+	fmt.Println(cycle)
 
-		/// @dev Retrieve values from db
-		values := mongodb.GetLatestAssetIndex(strings.ToUpper(cycle))
-		if values == nil {
-			values = map[string]interface{}{
+	/// @dev Retrieve values from db
+	values := mongodb.GetLatestAssetIndex(strings.ToUpper(cycle))
+	if values == nil {
+		values = map[string]interface{}{
+			"cycle":     "0",
+			"price":     "0",
+			"timestamp": "0",
+		}
+	}
+
+	utils.ResJSON(http.StatusCreated, w,
+		values,
+	)
+
+	if values == nil {
+		fmt.Errorf("No db entry for uSTONKS index.")
+	}
+}
+
+func GetUStonksIndexHistory(w http.ResponseWriter, r *http.Request) {
+	cycle := chi.URLParam(r, "cycle")
+	fmt.Println(cycle)
+
+	/// @dev Retrieve values from db
+	history := mongodb.GetAssetIndexHistoryDaily(strings.ToUpper(cycle))
+	if history == nil {
+		history = []map[string]interface{}{
+			{
 				"cycle":     "0",
 				"price":     "0",
 				"timestamp": "0",
-			}
+			},
 		}
+	}
 
-		utils.ResJSON(http.StatusCreated, w,
-			values,
-		)
+	utils.ResJSON(http.StatusCreated, w,
+		history,
+	)
 
-		if values == nil {
-			fmt.Errorf("No db entry for uSTONKS index.")
-		}
-	})
-}
-
-func GetUStonksIndexHistory(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
-	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		query := r.URL.Query()
-		cycle := query.Get("cycle")
-
-		/// @dev Retrieve values from db
-		history := mongodb.GetAssetIndexHistoryDaily(strings.ToUpper(cycle))
-		if history == nil {
-			history = []map[string]interface{}{
-				{
-					"cycle":     "0",
-					"price":     "0",
-					"timestamp": "0",
-				},
-			}
-		}
-
-		utils.ResJSON(http.StatusCreated, w,
-			history,
-		)
-
-		if history == nil {
-			fmt.Errorf("No db entry for uSTONKS index.")
-		}
-	})
+	if history == nil {
+		fmt.Errorf("No db entry for uSTONKS index.")
+	}
 }
