@@ -48,8 +48,8 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	GetAssetsJson("/synths/assets", router, conf, geth)
 	GetPunkIndex("/synths/upunks/price", router, conf, geth)
 	GetPunkIndexHistory("/synths/upunks/price-history", router, conf, geth)
-	GetUStonksIndex("/synths/ustonks/index", router, conf, geth)
-	GetUStonksIndexHistory("/synths/ustonks/index-history", router, conf, geth)
+	router.Get("/synths/{cycle}/index", GetUStonksIndex)
+	router.Get("/synths/{cycle}/index-history", GetUStonksIndexHistory)
 
 	GetAssetsJson("/degenerative/assets", router, conf, geth)                         // to remove later
 	GetPunkIndex("/degenerative/upunks/price", router, conf, geth)                    // to remove later
