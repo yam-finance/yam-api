@@ -36,6 +36,8 @@ func run() error {
 		mongodb.InsertAssetIndex(values)
 		values = routes.FetchAssetIndex("jun21", "USTONKS-0621")
 		mongodb.InsertAssetIndex(values)
+        values = routes.FetchAssetIndex("sep21", "USTONKS-0921")
+		mongodb.InsertAssetIndex(values)
 	})
 	storeAssetIndexCron.Start()
 
