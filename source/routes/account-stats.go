@@ -372,7 +372,7 @@ func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclie
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 
 		/// @dev Load .env file
-		if _, err := os.Stat(".env"); err == nil || os.IsExist(err) {
+		if _, err := os.Stat(".env"); err != nil || os.IsExist(err) {
 			envErr := godotenv.Load(".env")
 			if envErr != nil {
 				log.Error("Error loading .env file")
