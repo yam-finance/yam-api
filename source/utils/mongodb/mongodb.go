@@ -31,7 +31,7 @@ type PunkIndex struct {
 
 func Connect() {
 	/// @dev Load .env file
-	if _, err := os.Stat(".env"); err == nil || os.IsNotExist(err) {
+	if _, err := os.Stat(".env"); err != nil || os.IsNotExist(err) {
 		envErr := godotenv.Load(".env")
 		if envErr != nil {
 			log.Fatalf("Error loading .env file")
