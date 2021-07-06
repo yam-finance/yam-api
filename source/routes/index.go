@@ -28,7 +28,6 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(cors.Handler)
-
 	// General
 	Index("/", router, conf)
 	Version("/version", router, conf)
@@ -38,8 +37,8 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	// YAM
 	Treasury("/treasury", router, conf, geth)
 	Tvl("/tvl", router, conf, geth)
-	TvlYam("/tvl/yam", router, conf, geth)
-	TvlDegenerative("/tvl/degenerative", router, conf, geth)
+	GetTvlIndex("/tvl/{param}", router, conf, geth)
+
 	Apr("/apr", router, conf, geth)
 	AprYam("/apr/yam", router, conf, geth)
 	// AprDegenerative("/apr/degenerative", router, conf, geth)
@@ -51,9 +50,9 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	router.Get("/synths/{cycle}/index", GetUStonksIndex)
 	router.Get("/synths/{cycle}/index-history", GetUStonksIndexHistory)
 
-	GetAssetsJson("/degenerative/assets", router, conf, geth)                         // to remove later
-	GetPunkIndex("/degenerative/upunks/price", router, conf, geth)                    // to remove later
-	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth)     // to remove later
+	GetAssetsJson("/degenerative/assets", router, conf, geth)                     // to remove later
+	GetPunkIndex("/degenerative/upunks/price", router, conf, geth)                // to remove later
+	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth) // to remove later
 
 	// Yam Protection (Umbrella)
 
