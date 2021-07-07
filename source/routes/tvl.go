@@ -8,7 +8,6 @@ import (
 	"math"
 	"math/big"
 	"net/http"
-	"os"
 	"reflect"
 	"yam-api/source/config"
 	erc20 "yam-api/source/contracts/erc20"
@@ -40,8 +39,37 @@ type responseDegenerative struct {
 	Total  float64      `json:"total"`
 }
 
+// --------- TVL Endpoints ---------
+
+func GetTvlIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
+	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		param := chi.URLParam(r, "param")
+		fmt.Println(param)
+		var response map[string]interface{}
+		response = make(map[string]interface{})
+		if param == "yam" {
+			var resultTvlYam map[string]interface{}
+			resultTvlYam = make(map[string]interface{})
+			tvl := CalculateTvlYam(geth)
+			resultTvlYam["farm"] = tvl
+			response["values"] = resultTvlYam
+			response["total"] = tvl
+		}
+		if param == "degenerative" {
+			values, total := CalculateTvlDegenerativeAll(geth)
+			response["values"] = values
+			response["total"] = total
+		}
+
+		utils.ResJSON(http.StatusCreated, w,
+			response,
+		)
+	})
+}
 func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		param := chi.URLParam(r, "param")
+		fmt.Println(param)
 		var response map[string]interface{}
 		response = make(map[string]interface{})
 		tvlYam := CalculateTvlYam(geth)
@@ -54,33 +82,6 @@ func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		result["UPUNKS"] = values["Upunks"]
 		response["values"] = result
 		response["total"] = tvlYam + total
-		utils.ResJSON(http.StatusCreated, w,
-			response,
-		)
-	})
-}
-func TvlYam(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
-	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		var response map[string]interface{}
-		var resultTvlYam map[string]interface{}
-		response = make(map[string]interface{})
-		resultTvlYam = make(map[string]interface{})
-		tvl := CalculateTvlYam(geth)
-		resultTvlYam["farm"] = tvl
-		response["values"] = resultTvlYam
-		response["total"] = tvl
-		utils.ResJSON(http.StatusCreated, w,
-			response,
-		)
-	})
-}
-func TvlDegenerative(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
-	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		var response map[string]interface{}
-		response = make(map[string]interface{})
-		values, total := CalculateTvlDegenerativeAll(geth)
-		response["values"] = values
-		response["total"] = total
 		utils.ResJSON(http.StatusCreated, w,
 			response,
 		)
@@ -114,18 +115,16 @@ func CalculateTvlDegenerative(empcontractAddress string, geth *ethclient.Client,
 	return result
 }
 func CalculateTvlDegenerativeAll(geth *ethclient.Client) (map[string]interface{}, float64) {
-	assetsFile, err := os.Open("assets.json")
 
+	resp, err := http.Get("https://raw.githubusercontent.com/yam-finance/degenerative-sdk/master/src/assets.json")
 	if err != nil {
-		log.Fatalf("failed to get jasonfile: %v", err)
+		log.Fatalln(err)
 	}
 
-	fmt.Println("Successfully Opened assets.json")
+	defer resp.Body.Close()
+	responseData, _ := ioutil.ReadAll(resp.Body)
 
-	//defer the closing of our jsonFile so that we can parse it later on
-	defer assetsFile.Close()
-	byteValue, _ := ioutil.ReadAll(assetsFile)
-	json.Unmarshal([]byte(byteValue), &AssetsFromFile)
+	json.Unmarshal([]byte(responseData), &AssetsFromFile)
 
 	wethPrice := utils.GetWETHPrice()
 	var result map[string]interface{}
