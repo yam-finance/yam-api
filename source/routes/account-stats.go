@@ -22,7 +22,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
-	"github.com/joho/godotenv"
 )
 
 // --------- Variables ---------
@@ -370,14 +369,6 @@ func GetERC20Transfers(accountAddress string, startBlock int, endBlock int) (txs
 
 func GasStats(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-
-		/// @dev Load .env file
-		if _, err := os.Stat(".env"); err == nil || os.IsExist(err) {
-			envErr := godotenv.Load(".env")
-			if envErr != nil {
-				log.Error("Error loading .env file")
-			}
-		}
 
 		etherscanKey := os.Getenv("ETHERSCAN_KEY")
 		api.setup(etherscanKey)
