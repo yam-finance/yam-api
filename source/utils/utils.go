@@ -290,3 +290,6 @@ func GetYamHousePrice() *big.Float {
 	s, err := strconv.ParseFloat(portfolio["price_usd"].(string), 64)
 	return big.NewFloat(s)
 }
+func FixedTwoDecimal(val float64) float64 {
+	return math.Floor(val*100) / 100
+}

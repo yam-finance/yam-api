@@ -15,11 +15,10 @@ import (
 func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		var response map[string]interface{}
-		var yUSDResponse map[string]interface{}
+
 		//var totalYUsdValue *big.Float
 
 		response = make(map[string]interface{})
-		yUSDResponse = make(map[string]interface{})
 
 		totalUMAValue := utils.GetBalance(contractAddress.UMA, contractAddress.TreasuryAddress, geth, 18)
 		totalYamHouseValue := utils.GetBalance(contractAddress.YamDaoHouse, contractAddress.TreasuryAddress, geth, 18)
@@ -63,20 +62,29 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 
 		yUsdTreasury_yUSD := new(big.Float).Mul(yUsdBalance, yusdPrice)
 		yUsdTreasury_USDC := usdcMultisigBalance
-		yUsdTreasury_USTONKSLP := usdcSLPBalance
+		yUsdTreasury_USTONKSLP := new(big.Float).Mul(usdcSLPBalance, big.NewFloat(2))
+		var val float64
 
-		yUSDResponse["yUSD"], _ = yUsdTreasury_yUSD.Float64()
-		yUSDResponse["USDC"], _ = yUsdTreasury_USDC.Float64()
-		yUSDResponse["USTONKSLP"], _ = yUsdTreasury_USTONKSLP.Float32()
-
-		response["uma"], _ = umaTreasury.Float64()
-		response["yamHouse"], _ = yamHouseTreasury.Float64()
-		response["dpi"], _ = dpiTreasury.Float64()
-		response["weth"], _ = wethTreasury.Float64()
-		response["yUSD"] = yUSDResponse
-		response["index"], _ = indexTreasury.Float64()
-		response["indexlp"], _ = indexLPTreasury.Float64()
-		response["sushi"], _ = sushiTreasury.Float64()
+		val, _ = umaTreasury.Float64()
+		response["UMA"] = utils.FixedTwoDecimal(val)
+		val, _ = yamHouseTreasury.Float64()
+		response["YAMHOUSE"] = utils.FixedTwoDecimal(val)
+		val, _ = dpiTreasury.Float64()
+		response["DPI"] = utils.FixedTwoDecimal(val)
+		val, _ = wethTreasury.Float64()
+		response["WETH"] = utils.FixedTwoDecimal(val)
+		val, _ = yUsdTreasury_yUSD.Float64()
+		response["YUSD"] = utils.FixedTwoDecimal(val)
+		val, _ = yUsdTreasury_USDC.Float64()
+		response["USDC"] = utils.FixedTwoDecimal(val)
+		val, _ = yUsdTreasury_USTONKSLP.Float64()
+		response["USTONKSLP"] = utils.FixedTwoDecimal(val)
+		val, _ = indexTreasury.Float64()
+		response["INDEX"] = utils.FixedTwoDecimal(val)
+		val, _ = indexLPTreasury.Float64()
+		response["INDEXLP"] = utils.FixedTwoDecimal(val)
+		val, _ = sushiTreasury.Float64()
+		response["SUSHI"] = utils.FixedTwoDecimal(val)
 
 		utils.ResJSON(http.StatusCreated, w,
 			response,
