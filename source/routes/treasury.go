@@ -33,6 +33,9 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		//  ustonks and usdc tokens of what we have in the USTONKS SEP pool
 		usdcSLPBalance := utils.GetBalance(contractAddress.USDC, contractAddress.USTONKSSEPPool, geth, 6)
 
+		//gitcoin balance
+		gitcoinBalance := utils.GetBalance(contractAddress.GitCoinAddress, contractAddress.TreasuryAddress, geth, 18)
+
 		yamTwap := utils.GetPriceByContract(contractAddress.Yamv3)
 		yusdPrice := utils.GetValue("yvault-lp-ycurve")
 		wethPrice := utils.GetWETHPrice()
@@ -43,7 +46,8 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		yamHousePrice := utils.GetYamHousePrice()
 		rewardsIndexCoop := utils.GetIndexCoopLPRewards(geth)
 		rewardsSushi := utils.GetSushiRewards(geth)
-
+		gitPrice := utils.GetPriceByContract(contractAddress.GitCoinAddress)
+		fmt.Println("getcoin price = ", gitPrice)
 		//	yamYUsdValue := new(big.Float).Mul(yamTwap, yamBalance)
 		fmt.Println("yamTwap=", yamTwap)
 		/*	if yUsdBalance != nil {
@@ -59,6 +63,7 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		umaTreasury := new(big.Float).Mul(totalUMAValue, umaPrice)
 		yamHouseTreasury := new(big.Float).Mul(totalYamHouseValue, yamHousePrice)
 		sushiTreasury := new(big.Float).Mul(rewardsSushi, sushiPrice)
+		gitCoinTreasury := new(big.Float).Mul(gitcoinBalance, gitPrice)
 
 		yUsdTreasury_yUSD := new(big.Float).Mul(yUsdBalance, yusdPrice)
 		yUsdTreasury_USDC := usdcMultisigBalance
@@ -85,6 +90,8 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		response["INDEXLP"] = utils.FixedTwoDecimal(val)
 		val, _ = sushiTreasury.Float64()
 		response["SUSHI"] = utils.FixedTwoDecimal(val)
+		val, _ = gitCoinTreasury.Float64()
+		response["GITCOIN"] = utils.FixedTwoDecimal(val)
 
 		utils.ResJSON(http.StatusCreated, w,
 			response,
