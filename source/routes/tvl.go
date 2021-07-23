@@ -75,11 +75,13 @@ func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		tvlYam := CalculateTvlYam(geth)
 		values, total := CalculateTvlDegenerativeAll(geth)
 		result := map[string]interface{}{}
+		synths := map[string]interface{}{}
 
+		synths["UGAS"] = values["Ugas"]
+		synths["USTONKS"] = values["Ustonks"]
+		synths["UPUNKS"] = values["Upunks"]
 		result["farm"] = tvlYam
-		result["UGAS"] = values["Ugas"]
-		result["USTONKS"] = values["Ustonks"]
-		result["UPUNKS"] = values["Upunks"]
+		result["synths"] = synths
 		response["values"] = result
 		response["total"] = tvlYam + total
 		utils.ResJSON(http.StatusCreated, w,
@@ -143,18 +145,18 @@ func CalculateTvlDegenerativeAll(geth *ethclient.Client) (map[string]interface{}
 		assetTvls = make(map[string]float64)
 		for _, assetItem := range assetArray {
 
-			if assetItem.Expired != true {
-				var assetTvl float64
-				if assetItem.Collateral == "WETH" {
-					wethPrice = utils.GetWETHPrice()
-					assetTvl = CalculateTvlDegenerative(assetItem.Emp.Address, geth, wethPrice, true)
-				} else {
-					wethPrice = big.NewFloat(1)
-					assetTvl = CalculateTvlDegenerative(assetItem.Emp.Address, geth, wethPrice, false)
-				}
-				assetTvls[assetItem.Cycle] = math.Floor(assetTvl*100) / 100
-				total = total + assetTvl
+			//if assetItem.Expired != true {
+			var assetTvl float64
+			if assetItem.Collateral == "WETH" {
+				wethPrice = utils.GetWETHPrice()
+				assetTvl = CalculateTvlDegenerative(assetItem.Emp.Address, geth, wethPrice, true)
+			} else {
+				wethPrice = big.NewFloat(1)
+				assetTvl = CalculateTvlDegenerative(assetItem.Emp.Address, geth, wethPrice, false)
 			}
+			assetTvls[assetItem.Cycle] = math.Floor(assetTvl*100) / 100
+			total = total + assetTvl
+			//	}
 		}
 		result[assetTypes.Type().Field(i).Name] = assetTvls
 	}
