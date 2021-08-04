@@ -118,7 +118,7 @@ func CalculateTvlDegenerative(empcontractAddress string, geth *ethclient.Client,
 }
 func CalculateTvlDegenerativeAll(geth *ethclient.Client) (map[string]interface{}, float64) {
 
-	resp, err := http.Get("https://raw.githubusercontent.com/yam-finance/synths-sdk/master/src/assets.json")
+	resp, err := http.Get("https://github.com/yam-finance/synths-sdk/blob/410c2cdd5cb5c235b6c5248d86c3fd701fcc80a5/src/assets.json")
 	if err != nil {
 		log.Fatalln(err)
 	}
