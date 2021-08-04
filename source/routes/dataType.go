@@ -8,7 +8,7 @@ type Assets struct {
 	Upunks  []AssetInstance `json:"upunks"`
 }
 type AssetsFile struct {
-	Assets Assets `json:"mainnet"`
+	Assets Assets `json:"1"`
 }
 type Asset struct {
 	AssetName     string
