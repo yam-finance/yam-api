@@ -57,6 +57,7 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	// Mofy
 	router.Get("/mofy/orders/{nftid}", GetMofyOrders)
 	router.Post("/mofy/orders/{nftid}", SetMofyOrders)
+	router.Delete("/mofy/orders/{nftid}", DeleteMofyOrders)
 
 	// Yam Protection (Umbrella)
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -396,10 +397,10 @@ func GetMofyOrders(_id string) map[string]interface{} {
 	if client != nil {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
-		punkCollection := databaseRef.Collection("mofy")
+		mofyCollection := databaseRef.Collection("mofy")
 
 		// @dev Find last document in collection
-		filterCursor, err := punkCollection.Find(ctx, bson.M{"nftid": _id})
+		filterCursor, err := mofyCollection.Find(ctx, bson.M{"nftid": _id})
 		if err != nil {
 			log.Fatal("Latest Order filterCursor", err)
 			return nil
@@ -415,9 +416,47 @@ func GetMofyOrders(_id string) map[string]interface{} {
 		nftid := resultsFiltered[len(resultsFiltered)-1]["nftid"].(string)
 		order := resultsFiltered[len(resultsFiltered)-1]["order"].(primitive.M)
 
+		if order == nil {
+			return nil
+		}
+
 		values := map[string]interface{}{
 			"nftid": nftid,
 			"order": order,
+		}
+
+		return values
+	} else {
+		return nil
+	}
+}
+
+func DeleteMofyOrders(_id string) map[string]interface{} {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		mofyCollection := databaseRef.Collection("mofy")
+
+		// @dev Find last document in collection
+		res, err := mofyCollection.DeleteMany(ctx, bson.M{"nftid": _id})
+		if err != nil {
+			log.Fatal("Delete Order filterCursor", err)
+			return nil
+		}
+
+		if res.DeletedCount == 0 {
+			fmt.Println("DeleteOne() document not found:", res)
+		} else {
+			// Print the results of the DeleteOne() method
+			fmt.Println("DeleteOne Result:", res)
+
+			// *mongo.DeleteResult object returned by API call
+			fmt.Println("DeleteOne TYPE:", reflect.TypeOf(res))
+		}
+
+		values := map[string]interface{}{
+			"nftid": _id,
+			"order": nil,
 		}
 
 		return values

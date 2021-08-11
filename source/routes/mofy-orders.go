@@ -48,6 +48,31 @@ func GetMofyOrders(w http.ResponseWriter, r *http.Request) {
 	if values == nil {
 		values = map[string]interface{}{
 			"nftid": strings.ToLower(nftid),
+			"order": nil,
+		}
+	}
+
+	fmt.Println(values)
+
+	utils.ResJSON(http.StatusCreated, w,
+		values,
+	)
+
+	if values == nil {
+		fmt.Errorf("No db entry for the given nft id.")
+	}
+}
+
+func DeleteMofyOrders(w http.ResponseWriter, r *http.Request) {
+	nftid := chi.URLParam(r, "nftid")
+	fmt.Println(nftid)
+
+	/// @dev Retrieve values from db
+	values := mongodb.DeleteMofyOrders(strings.ToLower(nftid))
+	if values == nil {
+		values = map[string]interface{}{
+			"nftid": strings.ToLower(nftid),
+			"order": nil,
 		}
 	}
 
