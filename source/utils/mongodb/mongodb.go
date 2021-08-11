@@ -150,6 +150,26 @@ func InsertAssetIndex(val map[string]interface{}) {
 	}
 }
 
+func InsertMofyOrder(_id string, _val interface{}) bool {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		mofyOrders := databaseRef.Collection("mofy")
+
+		/// @dev Insert new orders
+		_, err := mofyOrders.InsertOne(ctx, bson.D{
+			{Key: "nftid", Value: _id},
+			{Key: "order", Value: _val},
+		})
+		if err != nil {
+			log.Fatal("InsertMofyOrder", err)
+			return false
+		}
+	}
+
+	return true
+}
+
 func GetAprYam() map[string]interface{} {
 	if client != nil {
 		result := AprYam{}
@@ -364,6 +384,40 @@ func GetAssetIndexHistoryDaily(_cycle string) []map[string]interface{} {
 				i--
 				values = append([]map[string]interface{}{obj}, values...)
 			}
+		}
+
+		return values
+	} else {
+		return nil
+	}
+}
+
+func GetMofyOrders(_id string) map[string]interface{} {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		punkCollection := databaseRef.Collection("mofy")
+
+		// @dev Find last document in collection
+		filterCursor, err := punkCollection.Find(ctx, bson.M{"nftid": _id})
+		if err != nil {
+			log.Fatal("Latest Order filterCursor", err)
+			return nil
+		}
+		var resultsFiltered []bson.M
+		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
+			log.Fatal("Latest Order resultsFiltered", err)
+			return nil
+		} else if len(resultsFiltered) == 0 {
+			return nil
+		}
+
+		nftid := resultsFiltered[len(resultsFiltered)-1]["nftid"].(string)
+		order := resultsFiltered[len(resultsFiltered)-1]["order"].(primitive.M)
+
+		values := map[string]interface{}{
+			"nftid": nftid,
+			"order": order,
 		}
 
 		return values
