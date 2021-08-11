@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -148,6 +149,26 @@ func InsertAssetIndex(val map[string]interface{}) {
 			log.Fatal("InsertAssetIndex", err)
 		}
 	}
+}
+
+func InsertMofyOrder(_id string, _val interface{}) bool {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		mofyOrders := databaseRef.Collection("museum")
+
+		/// @dev Insert new orders
+		_, err := mofyOrders.InsertOne(ctx, bson.D{
+			{Key: "nftid", Value: _id},
+			{Key: "order", Value: _val},
+		})
+		if err != nil {
+			log.Fatal("InsertMofyOrder", err)
+			return false
+		}
+	}
+
+	return true
 }
 
 func GetAprYam() map[string]interface{} {
@@ -364,6 +385,78 @@ func GetAssetIndexHistoryDaily(_cycle string) []map[string]interface{} {
 				i--
 				values = append([]map[string]interface{}{obj}, values...)
 			}
+		}
+
+		return values
+	} else {
+		return nil
+	}
+}
+
+func GetMofyOrders(_id string) map[string]interface{} {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		mofyCollection := databaseRef.Collection("museum")
+
+		// @dev Find last document in collection
+		filterCursor, err := mofyCollection.Find(ctx, bson.M{"nftid": _id})
+		if err != nil {
+			log.Fatal("Latest Order filterCursor", err)
+			return nil
+		}
+		var resultsFiltered []bson.M
+		if err = filterCursor.All(ctx, &resultsFiltered); err != nil {
+			log.Fatal("Latest Order resultsFiltered", err)
+			return nil
+		} else if len(resultsFiltered) == 0 {
+			return nil
+		}
+
+		nftid := resultsFiltered[len(resultsFiltered)-1]["nftid"].(string)
+		order := resultsFiltered[len(resultsFiltered)-1]["order"].(primitive.M)
+
+		if order == nil {
+			return nil
+		}
+
+		values := map[string]interface{}{
+			"nftid": nftid,
+			"order": order,
+		}
+
+		return values
+	} else {
+		return nil
+	}
+}
+
+func DeleteMofyOrders(_id string) map[string]interface{} {
+	if client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		mofyCollection := databaseRef.Collection("museum")
+
+		// @dev Find last document in collection
+		res, err := mofyCollection.DeleteMany(ctx, bson.M{"nftid": _id})
+		if err != nil {
+			log.Fatal("Delete Order filterCursor", err)
+			return nil
+		}
+
+		if res.DeletedCount == 0 {
+			fmt.Println("DeleteOne() document not found:", res)
+		} else {
+			// Print the results of the DeleteOne() method
+			fmt.Println("DeleteOne Result:", res)
+
+			// *mongo.DeleteResult object returned by API call
+			fmt.Println("DeleteOne TYPE:", reflect.TypeOf(res))
+		}
+
+		values := map[string]interface{}{
+			"nftid": _id,
+			"order": nil,
 		}
 
 		return values
