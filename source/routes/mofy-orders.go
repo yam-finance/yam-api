@@ -48,7 +48,6 @@ func GetMofyOrders(w http.ResponseWriter, r *http.Request) {
 	if values == nil {
 		values = map[string]interface{}{
 			"nftid": strings.ToLower(nftid),
-			"order": "{}",
 		}
 	}
 
