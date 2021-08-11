@@ -54,6 +54,11 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	GetPunkIndex("/degenerative/upunks/price", router, conf, geth)                // to remove later
 	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth) // to remove later
 
+	// Mofy
+	router.Get("/museum/orders/{nftid}", GetMofyOrders)
+	router.Post("/museum/orders/{nftid}", SetMofyOrders)
+	router.Delete("/museum/orders/{nftid}", DeleteMofyOrders)
+
 	// Yam Protection (Umbrella)
 
 	return router
