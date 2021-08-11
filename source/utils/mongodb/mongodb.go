@@ -155,7 +155,7 @@ func InsertMofyOrder(_id string, _val interface{}) bool {
 	if client != nil {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
-		mofyOrders := databaseRef.Collection("mofy")
+		mofyOrders := databaseRef.Collection("museum")
 
 		/// @dev Insert new orders
 		_, err := mofyOrders.InsertOne(ctx, bson.D{
@@ -397,7 +397,7 @@ func GetMofyOrders(_id string) map[string]interface{} {
 	if client != nil {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
-		mofyCollection := databaseRef.Collection("mofy")
+		mofyCollection := databaseRef.Collection("museum")
 
 		// @dev Find last document in collection
 		filterCursor, err := mofyCollection.Find(ctx, bson.M{"nftid": _id})
@@ -435,7 +435,7 @@ func DeleteMofyOrders(_id string) map[string]interface{} {
 	if client != nil {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
-		mofyCollection := databaseRef.Collection("mofy")
+		mofyCollection := databaseRef.Collection("museum")
 
 		// @dev Find last document in collection
 		res, err := mofyCollection.DeleteMany(ctx, bson.M{"nftid": _id})
