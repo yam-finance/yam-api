@@ -67,7 +67,28 @@ func Connect() {
 	}
 	fmt.Println("Connected to MongoDB!")
 }
-
+func InsertTvl(val map[string]interface{}) {
+	if client != nil {
+		result := Tvl{}
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		aprYamCollection := databaseRef.Collection("tvl")
+		update := bson.M{
+			"$set": bson.M{"tvl": val},
+		}
+		upsert := true
+		after := options.After
+		opt := options.FindOneAndUpdateOptions{
+			ReturnDocument: &after,
+			Upsert:         &upsert,
+		}
+		er := aprYamCollection.FindOneAndUpdate(ctx, bson.M{}, update, &opt).Decode(&result)
+		if er != nil {
+			fmt.Println(er)
+			return
+		}
+	}
+}
 func InsertAprYam(val map[string]interface{}) {
 	if client != nil {
 		result := AprYam{}
@@ -169,6 +190,22 @@ func InsertMofyOrder(_id string, _val interface{}) bool {
 	}
 
 	return true
+}
+func GetTvl() map[string]interface{} {
+	if client != nil {
+		result := Tvl{}
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		aprYamCollection := databaseRef.Collection("tvl")
+		er := aprYamCollection.FindOne(ctx, bson.M{}).Decode(&result)
+		if er != nil {
+			fmt.Println(er)
+			return nil
+		}
+		fmt.Println(result.Value)
+		return result.Value
+	}
+	return nil
 }
 
 func GetAprYam() map[string]interface{} {

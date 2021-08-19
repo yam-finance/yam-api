@@ -16,6 +16,7 @@ import (
 	weth "yam-api/source/contracts/weth"
 	"yam-api/source/utils"
 	"yam-api/source/utils/contractAddress"
+	"yam-api/source/utils/mongodb"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -66,11 +67,34 @@ func GetTvlIndex(path string, router chi.Router, conf *config.Config, geth *ethc
 		)
 	})
 }
+
+/**
+  Calculating TVL
+*/
+func CalculateTvl(geth *ethclient.Client) map[string]interface{} {
+	var response map[string]interface{}
+	response = make(map[string]interface{})
+	result := map[string]interface{}{}
+	synths := map[string]interface{}{}
+
+	tvlYam := CalculateTvlYam(geth)
+	values, total := CalculateTvlDegenerativeAll(geth)
+	synths["UGAS"] = values["Ugas"]
+	synths["USTONKS"] = values["Ustonks"]
+	synths["UPUNKS"] = values["Upunks"]
+	result["farm"] = tvlYam
+	result["synths"] = synths
+	response["values"] = result
+	response["total"] = tvlYam + total
+	return response
+}
+func StoreTvl(val map[string]interface{}) {
+	mongodb.InsertTvl(val)
+}
 func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		param := chi.URLParam(r, "param")
-		fmt.Println(param)
-		var response map[string]interface{}
+
+		/*var response map[string]interface{}
 		response = make(map[string]interface{})
 		tvlYam := CalculateTvlYam(geth)
 		values, total := CalculateTvlDegenerativeAll(geth)
@@ -83,7 +107,11 @@ func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Cl
 		result["farm"] = tvlYam
 		result["synths"] = synths
 		response["values"] = result
-		response["total"] = tvlYam + total
+		response["total"] = tvlYam + total*/
+		response := mongodb.GetTvl()
+		if response == nil {
+			response = map[string]interface{}{}
+		}
 		utils.ResJSON(http.StatusCreated, w,
 			response,
 		)
