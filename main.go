@@ -68,7 +68,7 @@ func run() error {
 
 	/// @notice TVL scheduler
 	getTvlCron := cron.New()
-	getTvlCron.AddFunc("@every 20s", func() {
+	getTvlCron.AddFunc("@every 5m", func() {
 		val := routes.CalculateTvl(geth)
 		routes.StoreTvl(val)
 	})
