@@ -83,12 +83,11 @@ func CalculateAprYam(geth *ethclient.Client) map[string]interface{} {
 		eth_rebaserContract, err = eth_rebaser.NewEthRebaser(common.HexToAddress(contractAddress.Eth_rebaser), geth)
 
 	}
-	yamPrice, err := eth_rebaserContract.GetCurrentTWAP(nil)
-	yamPriceFloat := utils.BnToDec(yamPrice, 18)
+	yamPrice := utils.GetPriceByContract(contractAddress.Yamv3)
 	yamScalingFactor := utils.BnToDec(getScalingFactor(geth), 18)
 	yamTvl := CalculateTvlYam(geth)
 
-	temp1 := new(big.Float).Mul(new(big.Float).Mul(BoU, yamPriceFloat), new(big.Float).Mul(big.NewFloat(365.5), yamScalingFactor))
+	temp1 := new(big.Float).Mul(new(big.Float).Mul(BoU, yamPrice), new(big.Float).Mul(big.NewFloat(365.5), yamScalingFactor))
 	temp2 := new(big.Float).Quo(new(big.Float).Mul(temp1, big.NewFloat(100)), new(big.Float).Mul(big.NewFloat(7), big.NewFloat(yamTvl)))
 	if err != nil {
 		log.Fatalf("failed to get yamprice: %v", err)

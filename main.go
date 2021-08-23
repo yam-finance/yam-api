@@ -36,7 +36,7 @@ func run() error {
 		mongodb.InsertAssetIndex(values)
 		values = routes.FetchAssetIndex("jun21", "USTONKS-0621")
 		mongodb.InsertAssetIndex(values)
-        values = routes.FetchAssetIndex("sep21", "USTONKS-0921")
+		values = routes.FetchAssetIndex("sep21", "USTONKS-0921")
 		mongodb.InsertAssetIndex(values)
 	})
 	storeAssetIndexCron.Start()
@@ -65,6 +65,14 @@ func run() error {
 		routes.StoreAprDegenerative(val)
 	})
 	getAprDegenerativeCron.Start()*/
+
+	/// @notice TVL scheduler
+	getTvlCron := cron.New()
+	getTvlCron.AddFunc("@every 5m", func() {
+		val := routes.CalculateTvl(geth)
+		routes.StoreTvl(val)
+	})
+	getTvlCron.Start()
 
 	routes := routes.Initialize(conf, geth)
 	return source.Serve(conf, routes)
