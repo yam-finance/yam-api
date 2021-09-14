@@ -293,3 +293,22 @@ func GetYamHousePrice() *big.Float {
 func FixedTwoDecimal(val float64) float64 {
 	return math.Floor(val*100) / 100
 }
+
+func GetValueChange(asset_name string) *big.Float {
+	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/" + asset_name)
+	if err != nil {
+		log.Error(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error(err)
+	}
+	sb := string(body)
+	var result map[string]interface{}
+	json.Unmarshal([]byte(sb), &result)
+
+	market_data := result["market_data"].(map[string]interface{})
+	price_change := market_data["price_change_percentage_24h_in_currency"].(map[string]interface{})
+
+	return big.NewFloat(price_change["usd"].(float64))
+}

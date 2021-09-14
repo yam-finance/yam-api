@@ -15,7 +15,7 @@ import (
 func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		var response map[string]interface{}
-
+		assetInfo := map[string]interface{}{}
 		//var totalYUsdValue *big.Float
 
 		response = make(map[string]interface{})
@@ -40,9 +40,11 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		yusdPrice := utils.GetValue("yvault-lp-ycurve")
 		wethPrice := utils.GetWETHPrice()
 		dpiPrice := utils.GetValue("defipulse-index")
+		fmt.Println("dpi price = ", dpiPrice)
 		indexPrice := utils.GetValue("index-cooperative")
 		umaPrice := utils.GetValue("uma")
 		sushiPrice := utils.GetValue("sushi")
+		usdcPrice := utils.GetValue("usd-coin")
 		yamHousePrice := utils.GetYamHousePrice()
 		rewardsIndexCoop := utils.GetIndexCoopLPRewards(geth)
 		rewardsSushi := utils.GetSushiRewards(geth)
@@ -55,43 +57,141 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 			} else {
 				totalYUsdValue = new(big.Float).Add(yamYUsdValue, big.NewFloat(718900))
 			}*/
-		wethTreasury := new(big.Float).Mul(totalWETHValue, wethPrice)
+		//wethTreasury := new(big.Float).Mul(totalWETHValue, wethPrice)
 		//	yUSDTreasury := new(big.Float).Mul(totalYUsdValue, yusdPrice)
-		dpiTreasury := new(big.Float).Mul(totalDPIValue, dpiPrice)
-		indexTreasury := new(big.Float).Mul(new(big.Float).Add(rewardsIndexCoop, totalBalanceIndexCoop), indexPrice)
-		indexLPTreasury := new(big.Float).Add(new(big.Float).Mul(dpiPrice, big.NewFloat(2929)), new(big.Float).Mul(wethPrice, big.NewFloat(640)))
-		umaTreasury := new(big.Float).Mul(totalUMAValue, umaPrice)
-		yamHouseTreasury := new(big.Float).Mul(totalYamHouseValue, yamHousePrice)
-		sushiTreasury := new(big.Float).Mul(rewardsSushi, sushiPrice)
-		gitCoinTreasury := new(big.Float).Mul(gitcoinBalance, gitPrice)
+		//	dpiTreasury := new(big.Float).Mul(totalDPIValue, dpiPrice)
+		//	indexTreasury := new(big.Float).Mul(new(big.Float).Add(rewardsIndexCoop, totalBalanceIndexCoop), indexPrice)
+		//	indexLPTreasury := new(big.Float).Add(new(big.Float).Mul(dpiPrice, big.NewFloat(2929)), new(big.Float).Mul(wethPrice, big.NewFloat(640)))
+		//	umaTreasury := new(big.Float).Mul(totalUMAValue, umaPrice)
+		//	yamHouseTreasury := new(big.Float).Mul(totalYamHouseValue, yamHousePrice)
+		//	sushiTreasury := new(big.Float).Mul(rewardsSushi, sushiPrice)
+		//	gitCoinTreasury := new(big.Float).Mul(gitcoinBalance, gitPrice)
 
-		yUsdTreasury_yUSD := new(big.Float).Mul(yUsdBalance, yusdPrice)
-		yUsdTreasury_USDC := usdcMultisigBalance
+		//	yUsdTreasury_yUSD := new(big.Float).Mul(yUsdBalance, yusdPrice)
+		//	yUsdTreasury_USDC := usdcMultisigBalance
 		yUsdTreasury_USTONKSLP := new(big.Float).Mul(usdcSLPBalance, big.NewFloat(2))
-		var val float64
 
-		val, _ = umaTreasury.Float64()
-		response["UMA"] = utils.FixedTwoDecimal(val)
-		val, _ = yamHouseTreasury.Float64()
-		response["YAMHOUSE"] = utils.FixedTwoDecimal(val)
-		val, _ = dpiTreasury.Float64()
-		response["DPI"] = utils.FixedTwoDecimal(val)
-		val, _ = wethTreasury.Float64()
-		response["WETH"] = utils.FixedTwoDecimal(val)
-		val, _ = yUsdTreasury_yUSD.Float64()
-		response["YUSD"] = utils.FixedTwoDecimal(val)
-		val, _ = yUsdTreasury_USDC.Float64()
-		response["USDC"] = utils.FixedTwoDecimal(val)
+		change24UMA := utils.GetValueChange("uma")
+		change24DPI := utils.GetValueChange("defipulse-index")
+		change24WETH := utils.GetValueChange("weth")
+		change24YUSD := utils.GetValueChange("yvault-lp-ycurve")
+		change24IndexCoop := utils.GetValueChange("index-cooperative")
+		change24Sushi := utils.GetValueChange("sushi")
+		change24YAMAHOUSE := big.NewFloat(0)
+		change24USDC := utils.GetValueChange("usd-coin")
+		change24GTC := utils.GetValueChange("gitcoin")
+
+		var val float64
+		val, _ = totalUMAValue.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = umaPrice
+		assetInfo["change"] = change24UMA
+		targetMap := map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["UMA"] = targetMap
+
+		val, _ = totalYamHouseValue.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = yamHousePrice
+		assetInfo["change"] = change24YAMAHOUSE
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["YAMHOUSE"] = targetMap
+
+		val, _ = totalDPIValue.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = dpiPrice
+		assetInfo["change"] = change24DPI
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["DPI"] = targetMap
+
+		val, _ = totalWETHValue.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = wethPrice
+		assetInfo["change"] = change24WETH
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["WETH"] = targetMap
+
+		val, _ = yUsdBalance.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = yusdPrice
+		assetInfo["change"] = change24YUSD
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["YUSD"] = targetMap
+
+		val, _ = usdcMultisigBalance.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = usdcPrice
+		assetInfo["change"] = change24USDC
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["USDC"] = targetMap
+
+		//later need to modify
 		val, _ = yUsdTreasury_USTONKSLP.Float64()
-		response["USTONKSLP"] = utils.FixedTwoDecimal(val)
-		val, _ = indexTreasury.Float64()
-		response["INDEX"] = utils.FixedTwoDecimal(val)
-		val, _ = indexLPTreasury.Float64()
-		response["INDEXLP"] = utils.FixedTwoDecimal(val)
-		val, _ = sushiTreasury.Float64()
-		response["SUSHI"] = utils.FixedTwoDecimal(val)
-		val, _ = gitCoinTreasury.Float64()
-		response["GITCOIN"] = utils.FixedTwoDecimal(val)
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = usdcPrice
+		assetInfo["change"] = change24USDC
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["USTONKSLP"] = targetMap
+
+		val, _ = totalBalanceIndexCoop.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = indexPrice
+		assetInfo["change"] = change24IndexCoop
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["INDEX"] = targetMap
+
+		val, _ = rewardsIndexCoop.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = indexPrice
+		assetInfo["change"] = change24IndexCoop
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["INDEXLP"] = targetMap
+
+		val, _ = rewardsSushi.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = sushiPrice
+		assetInfo["change"] = change24Sushi
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["SUSHI"] = targetMap
+
+		val, _ = gitcoinBalance.Float64()
+		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+		assetInfo["price"] = gitPrice
+		assetInfo["change"] = change24GTC
+		targetMap = map[string]interface{}{}
+		for key, value := range assetInfo {
+			targetMap[key] = value
+		}
+		response["GITCOIN"] = targetMap
 
 		utils.ResJSON(http.StatusCreated, w,
 			response,
