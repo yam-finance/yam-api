@@ -7,6 +7,7 @@ import (
 	"yam-api/source/config"
 	"yam-api/source/utils"
 	"yam-api/source/utils/contractAddress"
+	"yam-api/source/utils/mongodb"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi"
@@ -14,10 +15,12 @@ import (
 
 func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		var response map[string]interface{}
-		response = make(map[string]interface{})
 
-		response = GetTreasury(geth)
+		//response = GetTreasury(geth)
+		response := mongodb.GetTreasury()
+		if response == nil {
+			response = map[string]interface{}{}
+		}
 		utils.ResJSON(http.StatusCreated, w,
 			response,
 		)
@@ -161,7 +164,9 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	return response
 
 }
-
+func StoreTreasury(val map[string]interface{}) {
+	mongodb.InsertTreasury(val)
+}
 func GetTreasuryCharts() {}
 
 func marketCap() {}
