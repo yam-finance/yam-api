@@ -312,3 +312,10 @@ func GetValueChange(asset_name string) *big.Float {
 
 	return big.NewFloat(price_change["usd"].(float64))
 }
+func CopyMap(assetInfo map[string]interface{}) map[string]interface{} {
+	targetMap := map[string]interface{}{}
+	for key, value := range assetInfo {
+		targetMap[key] = value
+	}
+	return targetMap
+}

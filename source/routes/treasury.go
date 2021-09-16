@@ -86,112 +86,68 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = umaPrice
 		assetInfo["change"] = change24UMA
-		targetMap := map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["UMA"] = targetMap
+		response["UMA"] = utils.CopyMap(assetInfo)
 
 		val, _ = totalYamHouseValue.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = yamHousePrice
 		assetInfo["change"] = change24YAMAHOUSE
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["YAMHOUSE"] = targetMap
+		response["YAMHOUSE"] = utils.CopyMap(assetInfo)
 
 		val, _ = totalDPIValue.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = dpiPrice
 		assetInfo["change"] = change24DPI
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["DPI"] = targetMap
+		response["DPI"] = utils.CopyMap(assetInfo)
 
 		val, _ = totalWETHValue.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = wethPrice
 		assetInfo["change"] = change24WETH
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["WETH"] = targetMap
+		response["WETH"] = utils.CopyMap(assetInfo)
 
 		val, _ = yUsdBalance.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = yusdPrice
 		assetInfo["change"] = change24YUSD
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["YUSD"] = targetMap
+		response["YUSD"] = utils.CopyMap(assetInfo)
 
 		val, _ = usdcMultisigBalance.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = usdcPrice
 		assetInfo["change"] = change24USDC
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["USDC"] = targetMap
+		response["USDC"] = utils.CopyMap(assetInfo)
 
 		//later need to modify
 		val, _ = yUsdTreasury_USTONKSLP.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = usdcPrice
 		assetInfo["change"] = change24USDC
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["USTONKSLP"] = targetMap
+		response["USTONKSLP"] = utils.CopyMap(assetInfo)
 
 		val, _ = totalBalanceIndexCoop.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = indexPrice
 		assetInfo["change"] = change24IndexCoop
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["INDEX"] = targetMap
+		response["INDEX"] = utils.CopyMap(assetInfo)
 
 		val, _ = rewardsIndexCoop.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = indexPrice
 		assetInfo["change"] = change24IndexCoop
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["INDEXLP"] = targetMap
+		response["INDEXLP"] = utils.CopyMap(assetInfo)
 
 		val, _ = rewardsSushi.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = sushiPrice
 		assetInfo["change"] = change24Sushi
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["SUSHI"] = targetMap
+		response["SUSHI"] = utils.CopyMap(assetInfo)
 
 		val, _ = gitcoinBalance.Float64()
 		assetInfo["quantity"] = utils.FixedTwoDecimal(val)
 		assetInfo["price"] = gitPrice
 		assetInfo["change"] = change24GTC
-		targetMap = map[string]interface{}{}
-		for key, value := range assetInfo {
-			targetMap[key] = value
-		}
-		response["GITCOIN"] = targetMap
+		response["GITCOIN"] = utils.CopyMap(assetInfo)
 
 		utils.ResJSON(http.StatusCreated, w,
 			response,
