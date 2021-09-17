@@ -319,3 +319,14 @@ func CopyMap(assetInfo map[string]interface{}) map[string]interface{} {
 	}
 	return targetMap
 }
+func SetTreasuryAssetInfo(quantity *big.Float, price *big.Float, change *big.Float) map[string]interface{} {
+	var val float64
+	val, _ = quantity.Float64()
+	assetInfo := map[string]interface{}{}
+	assetInfo["quantity"] = FixedTwoDecimal(val)
+	val, _ = price.Float64()
+	assetInfo["price"] = FixedTwoDecimal(val)
+	val, _ = change.Float64()
+	assetInfo["change"] = FixedTwoDecimal(val)
+	return assetInfo
+}

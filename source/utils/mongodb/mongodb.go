@@ -91,7 +91,7 @@ func InsertTvl(val map[string]interface{}) {
 }
 func InsertTreasury(val map[string]interface{}) {
 	if client != nil {
-		result := Tvl{}
+		result := Treasury{}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		databaseRef := client.Database(dbName)
 		treasuryCollection := databaseRef.Collection("treasury")

@@ -16,7 +16,7 @@ import (
 func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 
-		//response = GetTreasury(geth)
+		//response := GetTreasury(geth)
 		response := mongodb.GetTreasury()
 		if response == nil {
 			response = map[string]interface{}{}
@@ -29,7 +29,7 @@ func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclie
 
 func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	var response map[string]interface{}
-	assetInfo := map[string]interface{}{}
+
 	response = make(map[string]interface{})
 
 	totalUMAValue := utils.GetBalance(contractAddress.UMA, contractAddress.TreasuryAddress, geth, 18)
@@ -93,73 +93,62 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	change24USDC := utils.GetValueChange("usd-coin")
 	change24GTC := utils.GetValueChange("gitcoin")
 
-	var val float64
-	val, _ = totalUMAValue.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = umaPrice
-	assetInfo["change"] = change24UMA
-	response["UMA"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = umaPrice
+	//assetInfo["change"] = change24UMA
+	response["UMA"] = utils.SetTreasuryAssetInfo(totalUMAValue, umaPrice, change24UMA)
 
-	val, _ = totalYamHouseValue.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = yamHousePrice
-	assetInfo["change"] = change24YAMAHOUSE
-	response["YAMHOUSE"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = yamHousePrice
+	//assetInfo["change"] = change24YAMAHOUSE
+	response["YAMHOUSE"] = utils.SetTreasuryAssetInfo(totalYamHouseValue, yamHousePrice, change24YAMAHOUSE)
 
-	val, _ = totalDPIValue.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = dpiPrice
-	assetInfo["change"] = change24DPI
-	response["DPI"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = dpiPrice
+	//assetInfo["change"] = change24DPI
+	response["DPI"] = utils.SetTreasuryAssetInfo(totalDPIValue, dpiPrice, change24DPI)
 
-	val, _ = totalWETHValue.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = wethPrice
-	assetInfo["change"] = change24WETH
-	response["WETH"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = wethPrice
+	//assetInfo["change"] = change24WETH
+	response["WETH"] = utils.SetTreasuryAssetInfo(totalWETHValue, wethPrice, change24WETH)
 
-	val, _ = yUsdBalance.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = yusdPrice
-	assetInfo["change"] = change24YUSD
-	response["YUSD"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = yusdPrice
+	//assetInfo["change"] = change24YUSD
+	response["YUSD"] = utils.SetTreasuryAssetInfo(yUsdBalance, yusdPrice, change24YUSD)
 
-	val, _ = usdcMultisigBalance.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = usdcPrice
-	assetInfo["change"] = change24USDC
-	response["USDC"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = usdcPrice
+	//assetInfo["change"] = change24USDC
+	response["USDC"] = utils.SetTreasuryAssetInfo(usdcMultisigBalance, usdcPrice, change24USDC)
 
 	//later need to modify
-	val, _ = yUsdTreasury_USTONKSLP.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = usdcPrice
-	assetInfo["change"] = change24USDC
-	response["USTONKSLP"] = utils.CopyMap(assetInfo)
 
-	val, _ = totalBalanceIndexCoop.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = indexPrice
-	assetInfo["change"] = change24IndexCoop
-	response["INDEX"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = usdcPrice
+	//assetInfo["change"] = change24USDC
+	response["USTONKSLP"] = utils.SetTreasuryAssetInfo(yUsdTreasury_USTONKSLP, usdcPrice, change24USDC)
 
-	val, _ = rewardsIndexCoop.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = indexPrice
-	assetInfo["change"] = change24IndexCoop
-	response["INDEXLP"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = indexPrice
+	//assetInfo["change"] = change24IndexCoop
+	response["INDEX"] = utils.SetTreasuryAssetInfo(totalBalanceIndexCoop, indexPrice, change24IndexCoop)
 
-	val, _ = rewardsSushi.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = sushiPrice
-	assetInfo["change"] = change24Sushi
-	response["SUSHI"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = indexPrice
+	//assetInfo["change"] = change24IndexCoop
+	response["INDEXLP"] = utils.SetTreasuryAssetInfo(rewardsIndexCoop, indexPrice, change24IndexCoop)
 
-	val, _ = gitcoinBalance.Float64()
-	assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	assetInfo["price"] = gitPrice
-	assetInfo["change"] = change24GTC
-	response["GITCOIN"] = utils.CopyMap(assetInfo)
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = sushiPrice
+	//assetInfo["change"] = change24Sushi
+	response["SUSHI"] = utils.SetTreasuryAssetInfo(rewardsSushi, sushiPrice, change24Sushi)
+
+	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
+	//assetInfo["price"] = gitPrice
+	//assetInfo["change"] = change24GTC
+	response["GITCOIN"] = utils.SetTreasuryAssetInfo(gitcoinBalance, gitPrice, change24GTC)
 
 	return response
 
