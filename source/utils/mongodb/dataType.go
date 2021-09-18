@@ -17,3 +17,8 @@ type Tvl struct {
 	ID    primitive.ObjectID     `bson:"_id"`
 	Value map[string]interface{} `bson:"tvl"`
 }
+
+type Treasury struct {
+	ID    primitive.ObjectID     `bson:"_id"`
+	Value map[string]interface{} `bson:"treasury"`
+}
