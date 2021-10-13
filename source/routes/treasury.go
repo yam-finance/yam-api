@@ -32,7 +32,10 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 
 	response = make(map[string]interface{})
 
-	totalUMAValue := utils.GetBalance(contractAddress.UMA, contractAddress.TreasuryAddress, geth, 18)
+	totalUMATreasuryValue := utils.GetBalance(contractAddress.UMA, contractAddress.TreasuryAddress, geth, 18)
+	totalUMAMultisigValue := utils.GetBalance(contractAddress.UMA, contractAddress.MultisigUMAAddress, geth, 18)
+	totalUMAValue := new(big.Float).Add(totalUMATreasuryValue, totalUMAMultisigValue)
+
 	totalYamHouseValue := utils.GetBalance(contractAddress.YamDaoHouse, contractAddress.TreasuryAddress, geth, 18)
 	totalDPIValue := utils.GetBalance(contractAddress.DPI, contractAddress.TreasuryAddress, geth, 18)
 	totalWETHTokenBalance := utils.GetBalance(contractAddress.WETH, contractAddress.TreasuryAddress, geth, 18)
@@ -93,61 +96,28 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	change24USDC := utils.GetValueChange("usd-coin")
 	change24GTC := utils.GetValueChange("gitcoin")
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = umaPrice
-	//assetInfo["change"] = change24UMA
 	response["UMA"] = utils.SetTreasuryAssetInfo(totalUMAValue, umaPrice, change24UMA)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = yamHousePrice
-	//assetInfo["change"] = change24YAMAHOUSE
 	response["YAMHOUSE"] = utils.SetTreasuryAssetInfo(totalYamHouseValue, yamHousePrice, change24YAMAHOUSE)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = dpiPrice
-	//assetInfo["change"] = change24DPI
 	response["DPI"] = utils.SetTreasuryAssetInfo(totalDPIValue, dpiPrice, change24DPI)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = wethPrice
-	//assetInfo["change"] = change24WETH
 	response["WETH"] = utils.SetTreasuryAssetInfo(totalWETHValue, wethPrice, change24WETH)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = yusdPrice
-	//assetInfo["change"] = change24YUSD
 	response["YUSD"] = utils.SetTreasuryAssetInfo(yUsdBalance, yusdPrice, change24YUSD)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = usdcPrice
-	//assetInfo["change"] = change24USDC
 	response["USDC"] = utils.SetTreasuryAssetInfo(usdcMultisigBalance, usdcPrice, change24USDC)
 
 	//later need to modify
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = usdcPrice
-	//assetInfo["change"] = change24USDC
 	response["USTONKSLP"] = utils.SetTreasuryAssetInfo(yUsdTreasury_USTONKSLP, usdcPrice, change24USDC)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = indexPrice
-	//assetInfo["change"] = change24IndexCoop
 	response["INDEX"] = utils.SetTreasuryAssetInfo(totalBalanceIndexCoop, indexPrice, change24IndexCoop)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = indexPrice
-	//assetInfo["change"] = change24IndexCoop
 	response["INDEXLP"] = utils.SetTreasuryAssetInfo(rewardsIndexCoop, indexPrice, change24IndexCoop)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = sushiPrice
-	//assetInfo["change"] = change24Sushi
 	response["SUSHI"] = utils.SetTreasuryAssetInfo(rewardsSushi, sushiPrice, change24Sushi)
 
-	//assetInfo["quantity"] = utils.FixedTwoDecimal(val)
-	//assetInfo["price"] = gitPrice
-	//assetInfo["change"] = change24GTC
 	response["GITCOIN"] = utils.SetTreasuryAssetInfo(gitcoinBalance, gitPrice, change24GTC)
 
 	return response

@@ -326,6 +326,8 @@ func SetTreasuryAssetInfo(quantity *big.Float, price *big.Float, change *big.Flo
 	assetInfo["quantity"] = FixedTwoDecimal(val)
 	val, _ = price.Float64()
 	assetInfo["price"] = FixedTwoDecimal(val)
+	val, _ = new(big.Float).Mul(quantity, price).Float64()
+	assetInfo["value"] = FixedTwoDecimal(val)
 	val, _ = change.Float64()
 	assetInfo["change"] = FixedTwoDecimal(val)
 	return assetInfo

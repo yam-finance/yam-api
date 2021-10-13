@@ -76,7 +76,7 @@ func run() error {
 
 	/// @notice Treasury scheduler
 	getTreasuryCron := cron.New()
-	getTreasuryCron.AddFunc("@every 5m", func() {
+	getTreasuryCron.AddFunc("@every 15m", func() {
 		val := routes.GetTreasury(geth)
 		routes.StoreTreasury(val)
 	})
