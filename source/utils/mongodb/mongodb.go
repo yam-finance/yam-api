@@ -89,6 +89,28 @@ func InsertTvl(val map[string]interface{}) {
 		}
 	}
 }
+func InsertTreasury(val map[string]interface{}) {
+	if client != nil {
+		result := Treasury{}
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		treasuryCollection := databaseRef.Collection("treasury")
+		update := bson.M{
+			"$set": bson.M{"treasury": val},
+		}
+		upsert := true
+		after := options.After
+		opt := options.FindOneAndUpdateOptions{
+			ReturnDocument: &after,
+			Upsert:         &upsert,
+		}
+		er := treasuryCollection.FindOneAndUpdate(ctx, bson.M{}, update, &opt).Decode(&result)
+		if er != nil {
+			fmt.Println(er)
+			return
+		}
+	}
+}
 func InsertAprYam(val map[string]interface{}) {
 	if client != nil {
 		result := AprYam{}
@@ -198,6 +220,23 @@ func GetTvl() map[string]interface{} {
 		databaseRef := client.Database(dbName)
 		aprYamCollection := databaseRef.Collection("tvl")
 		er := aprYamCollection.FindOne(ctx, bson.M{}).Decode(&result)
+		if er != nil {
+			fmt.Println(er)
+			return nil
+		}
+		fmt.Println(result.Value)
+		return result.Value
+	}
+	return nil
+}
+
+func GetTreasury() map[string]interface{} {
+	if client != nil {
+		result := Treasury{}
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		databaseRef := client.Database(dbName)
+		treasuryCollection := databaseRef.Collection("treasury")
+		er := treasuryCollection.FindOne(ctx, bson.M{}).Decode(&result)
 		if er != nil {
 			fmt.Println(er)
 			return nil

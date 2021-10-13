@@ -74,6 +74,14 @@ func run() error {
 	})
 	getTvlCron.Start()
 
+	/// @notice Treasury scheduler
+	getTreasuryCron := cron.New()
+	getTreasuryCron.AddFunc("@every 15m", func() {
+		val := routes.GetTreasury(geth)
+		routes.StoreTreasury(val)
+	})
+	getTreasuryCron.Start()
+
 	routes := routes.Initialize(conf, geth)
 	return source.Serve(conf, routes)
 }
