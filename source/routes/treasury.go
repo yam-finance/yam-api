@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"math/big"
 	"net/http"
 	"yam-api/source/config"
@@ -42,20 +41,17 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	totalWETHValue := new(big.Float).Add(totalWETHTokenBalance, big.NewFloat(283))
 	totalBalanceIndexCoop := utils.GetBalance(contractAddress.INDEX, contractAddress.ContractTimelock, geth, 18)
 
-	//	yamBalance := utils.GetBalance(contractAddress.Yamv3, contractAddress.TreasuryAddress, geth, 18)
 	yUsdBalance := utils.GetBalance(contractAddress.YUsd, contractAddress.TreasuryAddress, geth, 18)
 	usdcMultisigBalance := utils.GetBalance(contractAddress.USDC, contractAddress.MultisigAddress, geth, 6)
+
 	//  ustonks and usdc tokens of what we have in the USTONKS SEP pool
 	usdcSLPBalance := utils.GetBalance(contractAddress.USDC, contractAddress.USTONKSSEPPool, geth, 6)
 
 	//gitcoin balance
 	gitcoinBalance := utils.GetBalance(contractAddress.GitCoinAddress, contractAddress.TreasuryAddress, geth, 18)
-
-	yamTwap := utils.GetPriceByContract(contractAddress.Yamv3)
 	yusdPrice := utils.GetValue("yvault-lp-ycurve")
 	wethPrice := utils.GetWETHPrice()
 	dpiPrice := utils.GetValue("defipulse-index")
-	fmt.Println("dpi price = ", dpiPrice)
 	indexPrice := utils.GetValue("index-cooperative")
 	umaPrice := utils.GetValue("uma")
 	sushiPrice := utils.GetValue("sushi")
@@ -64,28 +60,7 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	rewardsIndexCoop := utils.GetIndexCoopLPRewards(geth)
 	rewardsSushi := utils.GetSushiRewards(geth)
 	gitPrice := utils.GetPriceByContract(contractAddress.GitCoinAddress)
-
-	//	yamYUsdValue := new(big.Float).Mul(yamTwap, yamBalance)
-	fmt.Println("yamTwap=", yamTwap)
-	/*	if yUsdBalance != nil {
-			totalYUsdValue = new(big.Float).Add(yUsdBalance, new(big.Float).Add(yamYUsdValue, big.NewFloat(718900)))
-		} else {
-			totalYUsdValue = new(big.Float).Add(yamYUsdValue, big.NewFloat(718900))
-		}*/
-	//wethTreasury := new(big.Float).Mul(totalWETHValue, wethPrice)
-	//	yUSDTreasury := new(big.Float).Mul(totalYUsdValue, yusdPrice)
-	//	dpiTreasury := new(big.Float).Mul(totalDPIValue, dpiPrice)
-	//	indexTreasury := new(big.Float).Mul(new(big.Float).Add(rewardsIndexCoop, totalBalanceIndexCoop), indexPrice)
-	//	indexLPTreasury := new(big.Float).Add(new(big.Float).Mul(dpiPrice, big.NewFloat(2929)), new(big.Float).Mul(wethPrice, big.NewFloat(640)))
-	//	umaTreasury := new(big.Float).Mul(totalUMAValue, umaPrice)
-	//	yamHouseTreasury := new(big.Float).Mul(totalYamHouseValue, yamHousePrice)
-	//	sushiTreasury := new(big.Float).Mul(rewardsSushi, sushiPrice)
-	//	gitCoinTreasury := new(big.Float).Mul(gitcoinBalance, gitPrice)
-
-	//	yUsdTreasury_yUSD := new(big.Float).Mul(yUsdBalance, yusdPrice)
-	//	yUsdTreasury_USDC := usdcMultisigBalance
 	yUsdTreasury_USTONKSLP := new(big.Float).Mul(usdcSLPBalance, big.NewFloat(2))
-
 	change24UMA := utils.GetValueChange("uma")
 	change24DPI := utils.GetValueChange("defipulse-index")
 	change24WETH := utils.GetValueChange("weth")
