@@ -120,6 +120,9 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 
 	response["GITCOIN"] = utils.SetTreasuryAssetInfo(gitcoinBalance, gitPrice, change24GTC)
 
+	response["UGAS"] = utils.SetTreasuryAssetInfo(big.NewFloat(932000), big.NewFloat(1), big.NewFloat(0))
+	response["UPUNKS"] = utils.SetTreasuryAssetInfo(big.NewFloat(377383.5), big.NewFloat(1), big.NewFloat(0))
+
 	return response
 
 }
