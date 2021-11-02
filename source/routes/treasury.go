@@ -51,11 +51,20 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	//gitcoin balance
 	gitcoinBalance := utils.GetBalance(contractAddress.GitCoinAddress, contractAddress.TreasuryAddress, geth, 18)
 
+	//ugas
+	ugasBalanceAsWeth := new(big.Float).Add(utils.GetBalance(contractAddress.WETH, contractAddress.Ugas12Emp, geth, 18), utils.GetBalance(contractAddress.WETH, contractAddress.Ugas12Pool, geth, 18))
+
+	//upunks
+	upunksBalanceAsWeth := new(big.Float).Add(utils.GetBalance(contractAddress.WETH, contractAddress.Upunks12Emp, geth, 18), utils.GetBalance(contractAddress.WETH, contractAddress.Upunks12Pool, geth, 18))
+	fmt.Println("ugasBalance", ugasBalanceAsWeth)
+	fmt.Println("upunksBalance", upunksBalanceAsWeth)
+
 	yamTwap := utils.GetPriceByContract(contractAddress.Yamv3)
 	yusdPrice := utils.GetValue("yvault-lp-ycurve")
+
 	wethPrice := utils.GetWETHPrice()
 	dpiPrice := utils.GetValue("defipulse-index")
-	fmt.Println("dpi price = ", dpiPrice)
+
 	indexPrice := utils.GetValue("index-cooperative")
 	umaPrice := utils.GetValue("uma")
 	sushiPrice := utils.GetValue("sushi")
@@ -120,8 +129,8 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 
 	response["GITCOIN"] = utils.SetTreasuryAssetInfo(gitcoinBalance, gitPrice, change24GTC)
 
-	response["UGAS"] = utils.SetTreasuryAssetInfo(big.NewFloat(932000), big.NewFloat(1), big.NewFloat(0))
-	response["UPUNKS"] = utils.SetTreasuryAssetInfo(big.NewFloat(377383.5), big.NewFloat(1), big.NewFloat(0))
+	response["UGAS"] = utils.SetTreasuryAssetInfo(ugasBalanceAsWeth, wethPrice, big.NewFloat(0))
+	response["UPUNKS"] = utils.SetTreasuryAssetInfo(upunksBalanceAsWeth, wethPrice, big.NewFloat(0))
 
 	return response
 
