@@ -37,7 +37,7 @@ func ResByte(c int, h http.ResponseWriter, payload []byte) {
 }
 
 func ResJSON(c int, h http.ResponseWriter, payload interface{}) {
-	response, _ := json.Marshal(payload)
+	response, _ := json.MarshalIndent(payload, "", "  ")
 	h.Header().Set("Content-Type", "application/json")
 	h.WriteHeader(c)
 	h.Write(response)
@@ -332,3 +332,17 @@ func SetTreasuryAssetInfo(quantity *big.Float, price *big.Float, change *big.Flo
 	assetInfo["change"] = FixedTwoDecimal(val)
 	return assetInfo
 }
+
+// func GetData(quantity *big.Float, price *big.Float, change *big.Float) map[string]interface{} {
+// 	priceResponse, err := http.Get("https://api.coingecko.com/api/v3/coins/yam-2")
+// 	if err != nil {
+// 		fmt.Print(err.Error())
+// 		os.Exit(1)
+// 	}
+// 	var priceData PriceDataResp
+// 	priceResponseBody, err := ioutil.ReadAll(priceResponse.Body)
+// 	if err != nil {
+// 		log.Error(err)
+// 	}
+// 	json.Unmarshal([]byte(priceResponseBody), &priceData)
+// }

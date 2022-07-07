@@ -28,6 +28,7 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(cors.Handler)
+
 	// General
 	Index("/", router, conf)
 	Version("/version", router, conf)
@@ -35,31 +36,24 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	GasStats("/account-stats", router, conf, geth)
 
 	// YAM
-	Treasury("/treasury", router, conf, geth)
+	Price("/price", router, conf, geth)
+	PriceAvg("/price-avg/{startDate}/{endDate}", router, conf, geth)
 	Tvl("/tvl", router, conf, geth)
-	GetTvlIndex("/tvl/{param}", router, conf, geth)
-
 	Apr("/apr", router, conf, geth)
-	AprYam("/apr/yam", router, conf, geth)
-	// AprDegenerative("/apr/degenerative", router, conf, geth)
+	Treasury("/treasury", router, conf, geth)
 
-	// Yam Synths (Degenerative)
-	GetAssetsJson("/synths/assets", router, conf, geth)
-	GetPunkIndex("/synths/upunks/price", router, conf, geth)
-	GetPunkIndexHistory("/synths/upunks/price-history", router, conf, geth)
-	router.Get("/synths/{cycle}/index", GetUStonksIndex)
-	router.Get("/synths/{cycle}/index-history", GetUStonksIndexHistory)
-
-	GetAssetsJson("/degenerative/assets", router, conf, geth)                     // to remove later
-	GetPunkIndex("/degenerative/upunks/price", router, conf, geth)                // to remove later
-	GetPunkIndexHistory("/degenerative/upunks/price-history", router, conf, geth) // to remove later
-
-	// Mofy
-	router.Get("/museum/orders/{nftid}", GetMofyOrders)
-	router.Post("/museum/orders/{nftid}", SetMofyOrders)
-	router.Delete("/museum/orders/{nftid}", DeleteMofyOrders)
-
-	// Yam Protection (Umbrella)
+	// Deprecated
+	// AprYam("/apr/yam", router, conf, geth)
+	// // Yam Synths (Degenerative)
+	// GetAssetsJson("/synths/assets", router, conf, geth)
+	// GetPunkIndex("/synths/upunks/price", router, conf, geth)
+	// GetPunkIndexHistory("/synths/upunks/price-history", router, conf, geth)
+	// router.Get("/synths/{cycle}/index", GetUStonksIndex)
+	// router.Get("/synths/{cycle}/index-history", GetUStonksIndexHistory)
+	// // Mofy
+	// router.Get("/museum/orders/{nftid}", GetMofyOrders)
+	// router.Post("/museum/orders/{nftid}", SetMofyOrders)
+	// router.Delete("/museum/orders/{nftid}", DeleteMofyOrders)
 
 	return router
 }

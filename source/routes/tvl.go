@@ -27,21 +27,23 @@ import (
 type yam struct {
 	Farm float64 `json:"farm"`
 }
+
 type responseYam struct {
 	Values yam     `json:"values"`
 	Total  float64 `json:"total"`
 }
+
 type degenerative struct {
 	UGAS map[string]float64
 	UVOL map[string]float64
 }
+
 type responseDegenerative struct {
 	Values degenerative `json:"values"`
 	Total  float64      `json:"total"`
 }
 
 // --------- TVL Endpoints ---------
-
 func GetTvlIndex(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		param := chi.URLParam(r, "param")
@@ -75,17 +77,11 @@ func CalculateTvl(geth *ethclient.Client) map[string]interface{} {
 	var response map[string]interface{}
 	response = make(map[string]interface{})
 	result := map[string]interface{}{}
-	synths := map[string]interface{}{}
 
 	tvlYam := CalculateTvlYam(geth)
-	values, total := CalculateTvlDegenerativeAll(geth)
-	synths["UGAS"] = values["Ugas"]
-	synths["USTONKS"] = values["Ustonks"]
-	synths["UPUNKS"] = values["Upunks"]
 	result["farm"] = tvlYam
-	result["synths"] = synths
 	response["values"] = result
-	response["total"] = tvlYam + total
+	response["total"] = tvlYam
 	return response
 }
 func StoreTvl(val map[string]interface{}) {
@@ -93,21 +89,6 @@ func StoreTvl(val map[string]interface{}) {
 }
 func Tvl(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-
-		/*var response map[string]interface{}
-		response = make(map[string]interface{})
-		tvlYam := CalculateTvlYam(geth)
-		values, total := CalculateTvlDegenerativeAll(geth)
-		result := map[string]interface{}{}
-		synths := map[string]interface{}{}
-
-		synths["UGAS"] = values["Ugas"]
-		synths["USTONKS"] = values["Ustonks"]
-		synths["UPUNKS"] = values["Upunks"]
-		result["farm"] = tvlYam
-		result["synths"] = synths
-		response["values"] = result
-		response["total"] = tvlYam + total*/
 		response := mongodb.GetTvl()
 		if response == nil {
 			response = map[string]interface{}{}
