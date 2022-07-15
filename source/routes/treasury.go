@@ -107,7 +107,7 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	assets["usdc"] = SetTreasuryAssetInfo("USD Coin", "USDC", usdcBalance, usdcPrice, usdcValue, utils.GetValueChange("usd-coin"))
 	assets["gtc"] = SetTreasuryAssetInfo("Gitcoin Token", "GTC", gtcBalance, gtcPrice, gtcValue, utils.GetValueChange("gitcoin"))
 	assets["yvusdc"] = SetTreasuryAssetInfo("yvVault Token", "yvUSDC", yvusdcBalance, yvusdcPrice, yvusdcValue, utils.GetValueChange("usd-coin"))
-	assets["steth"] = SetTreasuryAssetInfo("Staked ETH", "stETH", stethBalance, stethPrice, stethValue, utils.GetValueChange("staked-ether"))
+	assets["steth"] = SetTreasuryAssetInfo("Curve stETH Token", "stETH", stethBalance, stethPrice, stethValue, utils.GetValueChange("staked-ether"))
 	assets["ethdpilp"] = SetTreasuryAssetInfo("ETH/DPI LP", "ETHDPILP", ethdpilpBalance, ethdpilpPrice, ethdpilpValue, noChange)
 	response["assets"] = assets
 	response["total"] = utils.FixedDecimals(wbtcValue + wethValue + yamValue + dpiValue + umaValue + sushiValue + xsushiValue + indexValue + usdcValue + gtcValue + yvusdcValue + stethValue + ethdpilpValue)
