@@ -38,7 +38,7 @@ type PriceAvgResp struct {
 
 func Price(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		yamPrice := utils.GetPriceByContract(contractAddress.Yamv3)
+		yamPrice := utils.GetPriceByContract(contractAddress.YAM)
 		if !utils.CheckSuccess(http.StatusCreated) {
 			utils.ResError(http.StatusCreated, w,
 				"error",

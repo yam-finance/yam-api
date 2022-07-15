@@ -11,8 +11,6 @@ import (
 	"strings"
 	erc20 "yam-api/source/contracts/erc20"
 	IndexStakingRewards "yam-api/source/contracts/indexStakingRewards"
-	sushi "yam-api/source/contracts/sushi"
-	sushibar "yam-api/source/contracts/sushibar"
 	"yam-api/source/utils/contractAddress"
 	"yam-api/source/utils/etherscan/response"
 	"yam-api/source/utils/log"
@@ -196,6 +194,7 @@ func GetDevMiningEmps() empList {
 	}
 	return result
 }
+
 func GetBalance(tokenAddress string, userAddress string, geth *ethclient.Client, decimals int) *big.Float {
 	tokenContract := GetErc20Contract(tokenAddress, geth)
 	balance, err := tokenContract.BalanceOf(nil, common.HexToAddress(userAddress))
@@ -211,6 +210,7 @@ func GetErc20Contract(address string, geth *ethclient.Client) *erc20.Erc20 {
 	}
 	return erc20Contract
 }
+
 func GetValue(asset_name string) *big.Float {
 	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/" + asset_name)
 	if err != nil {
@@ -226,8 +226,10 @@ func GetValue(asset_name string) *big.Float {
 
 	market_data := result["market_data"].(map[string]interface{})
 	current_price := market_data["current_price"].(map[string]interface{})
-	return big.NewFloat(current_price["usd"].(float64))
+	valuex := big.NewFloat(current_price["usd"].(float64))
+	return valuex
 }
+
 func GetIndexCoopLPRewards(geth *ethclient.Client) *big.Float {
 	IndexStakingRewardsContract, err := IndexStakingRewards.NewIndexStakingRewards(common.HexToAddress(contractAddress.IndexStakingRewards), geth)
 	if err != nil {
@@ -240,38 +242,7 @@ func GetIndexCoopLPRewards(geth *ethclient.Client) *big.Float {
 	return BnToDec(lpBalanceRewards, 18)
 
 }
-func GetSushiRewards(geth *ethclient.Client) *big.Float {
-	sushiContract, err := sushi.NewSushi(common.HexToAddress(contractAddress.SushiToken), geth)
-	if err != nil {
-		log.Error(err)
-	}
-	sushibarContract, err := sushibar.NewSushibar(common.HexToAddress(contractAddress.SushibarXSushi), geth)
-	if err != nil {
-		log.Error(err)
-	}
-	incentivizerBalance, err := sushibarContract.BalanceOf(nil, common.HexToAddress(contractAddress.ContractIncentivizer))
-	if err != nil {
-		log.Error("failed to get incentivizerBalance: %v", err)
-	}
-	xSushiTotalSupply, err := sushibarContract.TotalSupply(nil)
-	if err != nil {
-		log.Error("failed to get xSushiTotalSupply: %v", err)
-	}
-	sushiXSushiBalance, err := sushiContract.BalanceOf(nil, common.HexToAddress(contractAddress.SushibarXSushi))
-	if err != nil {
-		log.Error("failed to get sushiXSushiBalance: %v", err)
-	}
-	SushiBalance, err := sushiContract.BalanceOf(nil, common.HexToAddress(contractAddress.ContractIncentivizer))
-	if err != nil {
-		log.Error("failed to get SushiBalance: %v", err)
-	}
-	incentivizerBalanceF := BnToDec(incentivizerBalance, 18)
-	xSushiTotalSupplyF := BnToDec(xSushiTotalSupply, 18)
-	sushiXSushiBalanceF := BnToDec(sushiXSushiBalance, 18)
-	SushiBalanceF := BnToDec(SushiBalance, 18)
-	ret := new(big.Float).Add(SushiBalanceF, new(big.Float).Quo(new(big.Float).Mul(incentivizerBalanceF, sushiXSushiBalanceF), xSushiTotalSupplyF))
-	return ret
-}
+
 func GetYamHousePrice() *big.Float {
 	resp, err := http.Get("https://api.tokensets.com/public/v2/portfolios/yamhouse")
 	if err != nil {
@@ -290,11 +261,16 @@ func GetYamHousePrice() *big.Float {
 	s, err := strconv.ParseFloat(portfolio["price_usd"].(string), 64)
 	return big.NewFloat(s)
 }
-func FixedTwoDecimal(val float64) float64 {
+
+func FixedDecimals(val float64) float64 {
 	return math.Floor(val*100) / 100
 }
 
-func GetValueChange(asset_name string) *big.Float {
+func FixedTwoDecimals(val float64, acc big.Accuracy) float64 {
+	return math.Floor(val*100) / 100
+}
+
+func GetValueChange(asset_name string) float64 {
 	resp, err := http.Get("https://api.coingecko.com/api/v3/coins/" + asset_name)
 	if err != nil {
 		log.Error(err)
@@ -306,11 +282,9 @@ func GetValueChange(asset_name string) *big.Float {
 	sb := string(body)
 	var result map[string]interface{}
 	json.Unmarshal([]byte(sb), &result)
-
 	market_data := result["market_data"].(map[string]interface{})
 	price_change := market_data["price_change_percentage_24h_in_currency"].(map[string]interface{})
-
-	return big.NewFloat(price_change["usd"].(float64))
+	return float64(price_change["usd"].(float64))
 }
 func CopyMap(assetInfo map[string]interface{}) map[string]interface{} {
 	targetMap := map[string]interface{}{}
@@ -318,19 +292,6 @@ func CopyMap(assetInfo map[string]interface{}) map[string]interface{} {
 		targetMap[key] = value
 	}
 	return targetMap
-}
-func SetTreasuryAssetInfo(quantity *big.Float, price *big.Float, change *big.Float) map[string]interface{} {
-	var val float64
-	val, _ = quantity.Float64()
-	assetInfo := map[string]interface{}{}
-	assetInfo["quantity"] = FixedTwoDecimal(val)
-	val, _ = price.Float64()
-	assetInfo["price"] = FixedTwoDecimal(val)
-	val, _ = new(big.Float).Mul(quantity, price).Float64()
-	assetInfo["value"] = FixedTwoDecimal(val)
-	val, _ = change.Float64()
-	assetInfo["change"] = FixedTwoDecimal(val)
-	return assetInfo
 }
 
 // func GetData(quantity *big.Float, price *big.Float, change *big.Float) map[string]interface{} {
