@@ -181,7 +181,7 @@ func CalculateTvlYam(geth *ethclient.Client) float64 {
 	if err != nil {
 		log.Fatalf("failed to instantiate contract: %v", err)
 	}
-	yamPrice := utils.GetPriceByContract(contractAddress.Yamv3)
+	yamPrice := utils.GetPriceByContract(contractAddress.YAM)
 	fmt.Println("yamPrice = ", yamPrice)
 	userInfo, err := masterChefContract.UserInfo(&bind.CallOpts{}, big.NewInt(44), common.HexToAddress(contractAddress.ContractIncentivizer))
 	if err != nil {

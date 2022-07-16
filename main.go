@@ -29,26 +29,26 @@ func run() error {
 
 	mongodb.Connect()
 
-	/// @notice Asset Index scheduler
-	storeAssetIndexCron := cron.New()
-	storeAssetIndexCron.AddFunc("@every 5m", func() {
-		values := routes.FetchAssetIndex("apr21", "USTONKS-0421")
-		mongodb.InsertAssetIndex(values)
-		values = routes.FetchAssetIndex("jun21", "USTONKS-0621")
-		mongodb.InsertAssetIndex(values)
-		values = routes.FetchAssetIndex("sep21", "USTONKS-0921")
-		mongodb.InsertAssetIndex(values)
-	})
-	storeAssetIndexCron.Start()
+	// /// @notice Asset Index scheduler
+	// storeAssetIndexCron := cron.New()
+	// storeAssetIndexCron.AddFunc("@every 5m", func() {
+	// 	values := routes.FetchAssetIndex("apr21", "USTONKS-0421")
+	// 	mongodb.InsertAssetIndex(values)
+	// 	values = routes.FetchAssetIndex("jun21", "USTONKS-0621")
+	// 	mongodb.InsertAssetIndex(values)
+	// 	values = routes.FetchAssetIndex("sep21", "USTONKS-0921")
+	// 	mongodb.InsertAssetIndex(values)
+	// })
+	// storeAssetIndexCron.Start()
 
-	// TODO: Merge with Asset Index scheduler
-	/// @notice Punk Index scheduler
-	calculatePunkIndexCron := cron.New()
-	calculatePunkIndexCron.AddFunc("@every 5m", func() {
-		values := routes.CalculatePunkIndex(geth)
-		mongodb.InsertPunkIndex(values)
-	})
-	calculatePunkIndexCron.Start()
+	// // TODO: Merge with Asset Index scheduler
+	// /// @notice Punk Index scheduler
+	// calculatePunkIndexCron := cron.New()
+	// calculatePunkIndexCron.AddFunc("@every 5m", func() {
+	// 	values := routes.CalculatePunkIndex(geth)
+	// 	mongodb.InsertPunkIndex(values)
+	// })
+	// calculatePunkIndexCron.Start()
 
 	/// @notice YAM APR scheduler
 	getAprYamCron := cron.New()
@@ -76,7 +76,7 @@ func run() error {
 
 	/// @notice Treasury scheduler
 	getTreasuryCron := cron.New()
-	getTreasuryCron.AddFunc("@every 15m", func() {
+	getTreasuryCron.AddFunc("@every 5m", func() {
 		val := routes.GetTreasury(geth)
 		routes.StoreTreasury(val)
 	})

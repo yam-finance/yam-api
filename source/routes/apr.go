@@ -83,7 +83,7 @@ func CalculateAprYam(geth *ethclient.Client) map[string]interface{} {
 		eth_rebaserContract, err = eth_rebaser.NewEthRebaser(common.HexToAddress(contractAddress.Eth_rebaser), geth)
 
 	}
-	yamPrice := utils.GetPriceByContract(contractAddress.Yamv3)
+	yamPrice := utils.GetPriceByContract(contractAddress.YAM)
 	yamScalingFactor := utils.BnToDec(getScalingFactor(geth), 18)
 	yamTvl := CalculateTvlYam(geth)
 
@@ -100,7 +100,7 @@ func CalculateAprYam(geth *ethclient.Client) map[string]interface{} {
 func getScalingFactor(geth *ethclient.Client) *big.Int {
 	var err error
 	if yamv3Contract == nil {
-		yamv3Contract, err = yamv3.NewYamv3(common.HexToAddress(contractAddress.Yamv3), geth)
+		yamv3Contract, err = yamv3.NewYamv3(common.HexToAddress(contractAddress.YAM), geth)
 	}
 	yamScalingFactor, err := yamv3Contract.YamsScalingFactor(&bind.CallOpts{})
 	if err != nil {
@@ -237,7 +237,7 @@ func CalculateApr(payload Asset, geth *ethclient.Client) *big.Float {
 
 	umaRewards := rewards[payload.AssetInstance.Emp.Address]
 	umaPrice := utils.GetPriceByContract(contractAddress.UMA)
-	yamPrice := utils.GetPriceByContract(contractAddress.Yamv3)
+	yamPrice := utils.GetPriceByContract(contractAddress.YAM)
 	ethPrice := utils.GetPriceByContract(contractAddress.WETH)
 	var tokenPrice *big.Float
 	var baseCollateral float64

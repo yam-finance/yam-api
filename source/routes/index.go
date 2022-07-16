@@ -38,9 +38,9 @@ func Initialize(conf *config.Config, geth *ethclient.Client) chi.Router {
 	// YAM
 	Price("/price", router, conf, geth)
 	PriceAvg("/price-avg/{startDate}/{endDate}", router, conf, geth)
+	Treasury("/treasury", router, conf, geth)
 	Tvl("/tvl", router, conf, geth)
 	Apr("/apr", router, conf, geth)
-	Treasury("/treasury", router, conf, geth)
 
 	// Deprecated
 	// AprYam("/apr/yam", router, conf, geth)
