@@ -98,7 +98,7 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	ethdpilpPrice := GetETHDPILPPrice(geth)
 	ethdpilpValue := CalculateValue(ethdpilpBalance, ethdpilpPrice)
 
-	assets["wbtc"] = SetTreasuryAssetInfo("Wrapped Bitcoin", "WBTC", wbtcBalance, wbtcPrice, wbtcValue, utils.GetValueChange("weth"))
+	assets["wbtc"] = SetTreasuryAssetInfo("Wrapped Bitcoin", "WBTC", wbtcBalance, wbtcPrice, wbtcValue, utils.GetValueChange("wrapped-bitcoin"))
 	assets["weth"] = SetTreasuryAssetInfo("Wrapped Ether", "WETH", wethBalance, wethPrice, wethValue, utils.GetValueChange("weth"))
 	assets["yam"] = SetTreasuryAssetInfo("Yam Token", "YAM", yamBalance, yamPrice, yamValue, utils.GetValueChange("yam-2"))
 	assets["dpi"] = SetTreasuryAssetInfo("DefiPulse Index", "DPI", dpiBalance, dpiPrice, dpiValue, utils.GetValueChange("defipulse-index"))
