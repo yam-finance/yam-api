@@ -45,7 +45,7 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	var response map[string]interface{}
 	response = make(map[string]interface{})
 	assets := map[string]interface{}{}
-	noChange := float64(0)
+	// noChange := float64(0)
 	wbtcBalance := utils.GetBalance(contractAddress.WBTC, contractAddress.TreasuryAddress, geth, 8)
 	wbtcPrice := utils.GetValue("wrapped-bitcoin")
 	wbtcValue := CalculateValue(wbtcBalance, wbtcPrice)
@@ -75,28 +75,17 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	xsushiBalance := utils.GetBalance(contractAddress.XSUSHI, contractAddress.TreasuryAddress, geth, 18)
 	xsushiPrice := utils.GetValue("xsushi")
 	xsushiValue := CalculateValue(xsushiBalance, xsushiPrice)
-	indexBalanceTreasury := utils.GetBalance(contractAddress.INDEX, contractAddress.TreasuryAddress, geth, 18)
-	indexBalanceTimelock := utils.GetBalance(contractAddress.INDEX, contractAddress.ContractTimelock, geth, 18)
-	indexBalance := new(big.Float).Add(indexBalanceTreasury, indexBalanceTimelock)
-	indexPrice := utils.GetValue("index-cooperative")
-	indexValue := CalculateValue(indexBalance, indexPrice)
 	usdcBalanceTreasury := utils.GetBalance(contractAddress.USDC, contractAddress.TreasuryAddress, geth, 6)
 	usdcBalanceMultisig := utils.GetBalance(contractAddress.USDC, contractAddress.MultisigAddress, geth, 6)
 	usdcBalance := new(big.Float).Add(usdcBalanceTreasury, usdcBalanceMultisig)
 	usdcPrice := utils.GetValue("usd-coin")
 	usdcValue := CalculateValue(usdcBalance, usdcPrice)
-	gtcBalance := utils.GetBalance(contractAddress.GitCoinAddress, contractAddress.TreasuryAddress, geth, 18)
-	gtcPrice := utils.GetPriceByContract(contractAddress.GitCoinAddress)
-	gtcValue := CalculateValue(gtcBalance, gtcPrice)
 	yvusdcBalance := utils.GetBalance(contractAddress.YVUSDC, contractAddress.TreasuryAddress, geth, 6)
 	yvusdcPrice := new(big.Float).SetFloat64(1) // update new
 	yvusdcValue := CalculateValue(yvusdcBalance, yvusdcPrice)
 	stethBalance := utils.GetBalance(contractAddress.STETH, contractAddress.TreasuryAddress, geth, 18)
 	stethPrice := utils.GetValue("staked-ether")
 	stethValue := CalculateValue(stethBalance, stethPrice)
-	ethdpilpBalance := GetETHDPILPBalance(geth)
-	ethdpilpPrice := GetETHDPILPPrice(geth)
-	ethdpilpValue := CalculateValue(ethdpilpBalance, ethdpilpPrice)
 
 	assets["wbtc"] = SetTreasuryAssetInfo("Wrapped Bitcoin", "WBTC", wbtcBalance, wbtcPrice, wbtcValue, utils.GetValueChange("wrapped-bitcoin"))
 	assets["weth"] = SetTreasuryAssetInfo("Wrapped Ether", "WETH", wethBalance, wethPrice, wethValue, utils.GetValueChange("weth"))
@@ -105,14 +94,11 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	assets["uma"] = SetTreasuryAssetInfo("Uma Token", "UMA", umaBalance, umaPrice, umaValue, utils.GetValueChange("uma"))
 	assets["sushi"] = SetTreasuryAssetInfo("Sushi Token", "SUSHI", sushiBalance, sushiPrice, sushiValue, utils.GetValueChange("sushi"))
 	assets["xsushi"] = SetTreasuryAssetInfo("XSushi Token", "XSUSHI", xsushiBalance, xsushiPrice, xsushiValue, utils.GetValueChange("xsushi"))
-	assets["index"] = SetTreasuryAssetInfo("Index Token", "INDEX", indexBalance, indexPrice, indexValue, utils.GetValueChange("index-cooperative"))
 	assets["usdc"] = SetTreasuryAssetInfo("USD Coin", "USDC", usdcBalance, usdcPrice, usdcValue, utils.GetValueChange("usd-coin"))
-	assets["gtc"] = SetTreasuryAssetInfo("Gitcoin Token", "GTC", gtcBalance, gtcPrice, gtcValue, utils.GetValueChange("gitcoin"))
 	assets["yvusdc"] = SetTreasuryAssetInfo("yvVault Token", "yvUSDC", yvusdcBalance, yvusdcPrice, yvusdcValue, utils.GetValueChange("usd-coin"))
 	assets["steth"] = SetTreasuryAssetInfo("Curve stETH Token", "stETH", stethBalance, stethPrice, stethValue, utils.GetValueChange("staked-ether"))
-	assets["ethdpilp"] = SetTreasuryAssetInfo("ETH/DPI LP", "ETHDPILP", ethdpilpBalance, ethdpilpPrice, ethdpilpValue, noChange)
 	response["assets"] = assets
-	response["total"] = utils.FixedDecimals(wbtcValue + wethValue + yamValue + dpiValue + umaValue + sushiValue + xsushiValue + indexValue + usdcValue + gtcValue + yvusdcValue + stethValue + ethdpilpValue)
+	response["total"] = utils.FixedDecimals(wbtcValue + wethValue + yamValue + dpiValue + umaValue + sushiValue + xsushiValue + usdcValue + yvusdcValue + stethValue)
 	return response
 }
 

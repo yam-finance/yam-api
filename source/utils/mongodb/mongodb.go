@@ -46,7 +46,7 @@ func Connect() {
 
 	uri := fmt.Sprintf("mongodb://%s:%s@%s/%s?retryWrites=true&w=majority", dbUser, dbPass, dbURI, dbName)
 	//uri := "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false"
-	fmt.Println(uri)
+
 	var err error
 	client, err = mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
