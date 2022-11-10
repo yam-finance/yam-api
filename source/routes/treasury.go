@@ -30,8 +30,8 @@ type TreasuryAsset struct {
 
 func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		// response := GetTreasury(geth)
-		response := mongodb.GetTreasury()
+		response := GetTreasury(geth)
+		// response := mongodb.GetTreasury()
 		if response == nil {
 			response = map[string]interface{}{}
 		}
@@ -86,6 +86,9 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	stethBalance := utils.GetBalance(contractAddress.STETH, contractAddress.TreasuryAddress, geth, 18)
 	stethPrice := utils.GetValue("staked-ether")
 	stethValue := CalculateValue(stethBalance, stethPrice)
+	yamslpBalance := new(big.Float).SetFloat64(0.002110697802301048)
+	yamslpPrice := new(big.Float).SetFloat64(266059736)
+	yamslpValue := CalculateValue(yamslpBalance, yamslpPrice)
 
 	assets["wbtc"] = SetTreasuryAssetInfo("Wrapped Bitcoin", "WBTC", wbtcBalance, wbtcPrice, wbtcValue, utils.GetValueChange("wrapped-bitcoin"))
 	assets["weth"] = SetTreasuryAssetInfo("Wrapped Ether", "WETH", wethBalance, wethPrice, wethValue, utils.GetValueChange("weth"))
@@ -97,8 +100,9 @@ func GetTreasury(geth *ethclient.Client) map[string]interface{} {
 	assets["usdc"] = SetTreasuryAssetInfo("USD Coin", "USDC", usdcBalance, usdcPrice, usdcValue, utils.GetValueChange("usd-coin"))
 	assets["yvusdc"] = SetTreasuryAssetInfo("yvVault Token", "yvUSDC", yvusdcBalance, yvusdcPrice, yvusdcValue, utils.GetValueChange("usd-coin"))
 	assets["steth"] = SetTreasuryAssetInfo("Curve stETH Token", "stETH", stethBalance, stethPrice, stethValue, utils.GetValueChange("staked-ether"))
+	assets["yamslp"] = SetTreasuryAssetInfo("Yam SLP", "YAMSLP", yamslpBalance, yamslpPrice, yamslpValue, utils.GetValueChange("usd-coin"))
 	response["assets"] = assets
-	response["total"] = utils.FixedDecimals(wbtcValue + wethValue + yamValue + dpiValue + umaValue + sushiValue + xsushiValue + usdcValue + yvusdcValue + stethValue)
+	response["total"] = utils.FixedDecimals(wbtcValue + wethValue + yamValue + dpiValue + umaValue + sushiValue + xsushiValue + usdcValue + yvusdcValue + stethValue + yamslpValue)
 	return response
 }
 
