@@ -30,8 +30,8 @@ type TreasuryAsset struct {
 
 func Treasury(path string, router chi.Router, conf *config.Config, geth *ethclient.Client) {
 	router.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		response := GetTreasury(geth)
-		// response := mongodb.GetTreasury()
+		// response := GetTreasury(geth)
+		response := mongodb.GetTreasury()
 		if response == nil {
 			response = map[string]interface{}{}
 		}
